@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<brassproject version="3">
+	<template source="TI/Program.brassproj" />
+	<plugins>
+		<collection source="Legacy.dll" />
+	</plugins>
+	<input source="CA.asm">
+		<label name="Program.Name" type="string" value="CA" />
+		<label name="Program.Description" type="string" value="CA Project" />
+	</input>
+	<output writer="TI8X" destination="E:\CA.8xp">
+		<listing writer="text" destination="E:\CA.lst" />
+		<listing writer="html" destination="E:\CA.html" />
+	</output>
+</brassproject>
