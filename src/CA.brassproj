@@ -10,6 +10,5 @@
 	</input>
 	<output writer="TI8X" destination="E:\CA.8xp">
 		<listing writer="text" destination="E:\CA.lst" />
-		<listing writer="html" destination="E:\CA.html" />
 	</output>
 </brassproject>

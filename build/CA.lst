@@ -10097,7 +10097,7 @@ EF
 .dw _RunIndicOff
 70 45 
 CALL Main.Main
-CD 5F A5 
+CD 5D A5 
 rst 28h
 EF 
 .dw _ClrScrnFull
@@ -30586,6 +30586,18 @@ RET
 C9 
 
 
+DrawRectWhite = 0
+
+DrawRectBlack = 1
+
+DrawRectXor = 2
+
+DrawRectWhiteOpcode = Opcode.AndHL
+
+DrawRectBlackOpcode = Opcode.OrHL
+
+DrawRectXorOpcode = Opcode.XorHL
+
 DrawRect:
 
 XOR A
@@ -30617,7 +30629,7 @@ LD L, A
 LD A, L
 7D 
 LD (__Height), A
-32 73 9E 
+32 6D 9E 
 
 
 LD A, Screen.Width - 1
@@ -30638,42 +30650,38 @@ LD C, H
 4C 
 LD A, B
 78 
-CP 0
+CP DrawRectWhite
 FE 00 
-JR Z, __SetOperationAnd
-28 0F 
-CP 1
+JR Z, __SetOperationWhite
+28 0C 
+CP DrawRectBlack
 FE 01 
-JR Z, __SetOperationOr
+JR Z, __SetOperationBlack
 28 04 
-CP 2
+CP DrawRectXor
 FE 02 
 JR Z, __SetOperationXor
-28 0E 
-__SetOperationOr:
+28 08 
+__SetOperationBlack:
 
-LD A, Opcode.OrHL
+LD A, DrawRectBlackOpcode
 3E B6 
-LD (__Operation), A
-32 65 9E 
-JR __FindScreenAddress
-18 0C 
-__SetOperationAnd:
+JR __SaveOperation
+18 06 
+__SetOperationWhite:
 
-LD A, Opcode.AndHL
+LD A, DrawRectWhiteOpcode
 3E A6 
-LD (__Operation), A
-32 65 9E 
-JR __FindScreenAddress
-18 05 
+JR __SaveOperation
+18 02 
 __SetOperationXor:
 
-LD A, Opcode.XorHL
+LD A, DrawRectXorOpcode
 3E AE 
-LD (__Operation), A
-32 65 9E 
-__FindScreenAddress:
+__SaveOperation:
 
+LD (__Operation), A
+32 5F 9E 
 
 
 LD A, D
@@ -30716,14 +30724,16 @@ LD D, B
 50 
 LD E, A
 5F 
-LD B, A
-47 
+
+
 OR A
 B7 
 LD A, $FF
 3E FF 
-JR Z, $+6
-28 04 
+JR Z, $+7
+28 05 
+LD B, E
+43 
 __ShiftHighMask:
 
 SRL A
@@ -30731,7 +30741,7 @@ CB 3F
 DJNZ __ShiftHighMask
 10 FC 
 LD (__HighMask), A
-32 61 9E 
+32 5B 9E 
 LD A, E
 7B 
 ADD A, C
@@ -30755,7 +30765,7 @@ DJNZ __ShiftLowMask
 CPL
 2F 
 LD (__LowMask), A
-32 63 9E 
+32 5D 9E 
 LD A, E
 7B 
 ADD A, C
@@ -30776,10 +30786,12 @@ LD C, 0
 0E 00 
 LD A, C
 79 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 FE A6 
 JR NZ, __NoInvertMasks
 20 06 
+
+
 LD A, D
 7A 
 CPL
@@ -30809,15 +30821,15 @@ CB 3F
 SUB 1
 D6 01 
 JR C, __OneByte
-38 42 
+38 41 
 JR Z, __TwoBytes
-28 61 
+28 5D 
 PUSH AF
 F5 
 LD A, B
 78 
 LD (__MultiByteSetHeight), A
-32 98 9E 
+32 92 9E 
 POP AF
 F1 
 LD B, A
@@ -30826,28 +30838,30 @@ LD A, Screen.WidthBytes - 1
 3E 0B 
 SUB B
 90 
+
+
 LD (__MultiByteRowSpan), A
-32 B8 9E 
+32 B2 9E 
 LD A, C
 79 
 LD (__MultiByteHighOperation), A
-32 AA 9E 
+32 A4 9E 
 LD (__MultiByteMiddleOperation), A
-32 AF 9E 
+32 A9 9E 
 LD (__MultiByteLowOperation), A
-32 B5 9E 
+32 AF 9E 
 __MultiByteSetHeight = $+1
 
 LD C, 0
 0E 00 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 FE A6 
 JR NZ, _WriteMultiByteNotWhite
 20 06 
 XOR A
 AF 
 LD (__MultiByteMiddleValue), A
-32 AE 9E 
+32 A8 9E 
 JR __WriteMultiByte
 18 05 
 _WriteMultiByteNotWhite:
@@ -30855,11 +30869,13 @@ _WriteMultiByteNotWhite:
 LD A, $FF
 3E FF 
 LD (__MultiByteMiddleValue), A
-32 AE 9E 
+32 A8 9E 
 __WriteMultiByte:
 
 PUSH BC
 C5 
+
+
 LD A, D
 7A 
 __MultiByteHighOperation:
@@ -30886,6 +30902,8 @@ INC HL
 23 
 DJNZ __MiddleByteLoop
 10 F9 
+
+
 LD A, E
 7B 
 __MultiByteLowOperation:
@@ -30896,16 +30914,18 @@ LD (HL), A
 77 
 __MultiByteRowSpan = $+1
 
-LD BC, 0
-01 00 00 
+LD C, 0
+0E 00 
 ADD HL, BC
 09 
+
+
 POP BC
 C1 
 DEC C
 0D 
 JR NZ, __WriteMultiByte
-20 E9 
+20 EA 
 RET
 C9 
 __OneByte:
@@ -30913,31 +30933,29 @@ __OneByte:
 LD A, C
 79 
 LD (__OneByteOperation), A
-32 DB 9E 
-CP Opcode.AndHL
+32 D1 9E 
+CP DrawRectWhiteOpcode
 FE A6 
 JR NZ, __OneByteNotWhite
-20 07 
+20 04 
 LD A, Opcode.OrE
 3E B3 
-LD (__OneByteComboOperation), A
-32 D5 9E 
 JR __OneByteCombine
-18 05 
+18 02 
 __OneByteNotWhite:
 
 LD A, Opcode.AndE
 3E A3 
-LD (__OneByteComboOperation), A
-32 D5 9E 
 __OneByteCombine:
 
+LD (__OneByteComboOperation), A
+32 CB 9E 
 LD A, D
 7A 
 __OneByteComboOperation:
 
-AND E
-A3 
+OR E
+B3 
 LD C, A
 4F 
 LD DE, Screen.WidthBytes
@@ -30963,13 +30981,21 @@ __TwoBytes:
 LD A, C
 79 
 LD (__TwoBytesHighOperation), A
-32 EA 9E 
+32 E7 9E 
 LD (__TwoBytesLowOperation), A
-32 EE 9E 
+32 EB 9E 
+
+
+LD A, E
+7B 
+LD (__TwoByteMasks), A
+32 F2 9E 
+LD A, D
+7A 
+LD (__TwoByteMasks+1), A
+32 F3 9E 
 __WriteTwoBytes:
 
-PUSH BC
-C5 
 LD A, D
 7A 
 __TwoBytesHighOperation:
@@ -30988,14 +31014,16 @@ OR (HL)
 B6 
 LD (HL), A
 77 
-LD BC, Screen.WidthBytes - 1
-01 0B 00 
-ADD HL, BC
-09 
-POP BC
-C1 
+LD DE, Screen.WidthBytes - 1
+11 0B 00 
+ADD HL, DE
+19 
+__TwoByteMasks = $+1
+
+LD DE, 0
+11 00 00 
 DJNZ __WriteTwoBytes
-10 F1 
+10 F0 
 RET
 C9 
 
@@ -31028,12 +31056,12 @@ CP C
 B9 
 RET NC
 D0 
-
-
 LD A, D
 7A 
 PUSH HL
 E5 
+
+
 
 
 LD H, 0
@@ -41353,7 +41381,7 @@ TableSize = Count * DataSize
 CreateGlyphTable:
 
 LD HL, GlyphTableVar
-21 EF 9F 
+21 EE 9F 
 RST rMOV9TOOP1
 E7 
 LD HL, TableSize
@@ -41363,9 +41391,9 @@ EF
 .dw _CreateAppVar
 6A 4E 
 LD (GlyphTableEntryAddr), HL
-22 F9 9F 
+22 F8 9F 
 LD (GlyphTableAddr), DE
-ED 53 F7 9F 
+ED 53 F6 9F 
 RET
 C9 
 GetGlyphSpriteAddr:
@@ -41387,7 +41415,7 @@ ADD HL, HL
 ADD HL, DE
 19 
 LD DE, (GlyphTableAddr)
-ED 5B F7 9F 
+ED 5B F6 9F 
 ADD HL, DE
 19 
 RET
@@ -41399,7 +41427,7 @@ LoadGlyphs:
 LD B, 0
 06 00 
 LD DE, (GlyphTableAddr)
-ED 5B F7 9F 
+ED 5B F6 9F 
 __LoadGlyphsLoop:
 
 PUSH BC
@@ -41443,7 +41471,7 @@ LD A, 8
 SUB C
 91 
 LD (__LeftShifts), A
-32 C5 9F 
+32 C4 9F 
 LD B, 7
 06 07 
 __CopyGlyphsLoop:
@@ -41487,11 +41515,11 @@ C9
 DeleteGlyphTable:
 
 LD HL, (GlyphTableAddr)
-2A F7 9F 
+2A F6 9F 
 EX DE, HL
 EB 
 LD HL, (GlyphTableEntryAddr)
-2A F9 9F 
+2A F8 9F 
 LD B, 0
 06 00 
 rst 28h
@@ -41501,9 +41529,9 @@ EF
 LD HL, 0
 21 00 00 
 LD (GlyphTableAddr), HL
-22 F7 9F 
+22 F6 9F 
 LD (GlyphTableEntryAddr), HL
-22 F9 9F 
+22 F8 9F 
 RET
 C9 
 GlyphTableVar:
@@ -41644,6 +41672,18 @@ RET
 
 
 
+DrawRectWhite = 0
+
+DrawRectBlack = 1
+
+DrawRectXor = 2
+
+DrawRectWhiteOpcode = Opcode.AndHL
+
+DrawRectBlackOpcode = Opcode.OrHL
+
+DrawRectXorOpcode = Opcode.XorHL
+
 DrawRect:
 
 XOR A
@@ -41696,41 +41736,37 @@ LD C, H
 
 LD A, B
 
-CP 0
+CP DrawRectWhite
 
-JR Z, __SetOperationAnd
+JR Z, __SetOperationWhite
 
-CP 1
+CP DrawRectBlack
 
-JR Z, __SetOperationOr
+JR Z, __SetOperationBlack
 
-CP 2
+CP DrawRectXor
 
 JR Z, __SetOperationXor
 
-__SetOperationOr:
+__SetOperationBlack:
 
-LD A, Opcode.OrHL
+LD A, DrawRectBlackOpcode
 
-LD (__Operation), A
+JR __SaveOperation
 
-JR __FindScreenAddress
+__SetOperationWhite:
 
-__SetOperationAnd:
+LD A, DrawRectWhiteOpcode
 
-LD A, Opcode.AndHL
-
-LD (__Operation), A
-
-JR __FindScreenAddress
+JR __SaveOperation
 
 __SetOperationXor:
 
-LD A, Opcode.XorHL
+LD A, DrawRectXorOpcode
+
+__SaveOperation:
 
 LD (__Operation), A
-
-__FindScreenAddress:
 
 
 
@@ -41774,13 +41810,15 @@ LD D, B
 
 LD E, A
 
-LD B, A
+
 
 OR A
 
 LD A, $FF
 
-JR Z, $+6
+JR Z, $+7
+
+LD B, E
 
 __ShiftHighMask:
 
@@ -41834,9 +41872,11 @@ LD C, 0
 
 LD A, C
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, __NoInvertMasks
+
+
 
 LD A, D
 
@@ -41884,6 +41924,8 @@ LD A, Screen.WidthBytes - 1
 
 SUB B
 
+
+
 LD (__MultiByteRowSpan), A
 
 LD A, C
@@ -41898,7 +41940,7 @@ __MultiByteSetHeight = $+1
 
 LD C, 0
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, _WriteMultiByteNotWhite
 
@@ -41917,6 +41959,8 @@ LD (__MultiByteMiddleValue), A
 __WriteMultiByte:
 
 PUSH BC
+
+
 
 LD A, D
 
@@ -41944,6 +41988,8 @@ INC HL
 
 DJNZ __MiddleByteLoop
 
+
+
 LD A, E
 
 __MultiByteLowOperation:
@@ -41954,9 +42000,11 @@ LD (HL), A
 
 __MultiByteRowSpan = $+1
 
-LD BC, 0
+LD C, 0
 
 ADD HL, BC
+
+
 
 POP BC
 
@@ -41972,13 +42020,11 @@ LD A, C
 
 LD (__OneByteOperation), A
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, __OneByteNotWhite
 
 LD A, Opcode.OrE
-
-LD (__OneByteComboOperation), A
 
 JR __OneByteCombine
 
@@ -41986,15 +42032,15 @@ __OneByteNotWhite:
 
 LD A, Opcode.AndE
 
-LD (__OneByteComboOperation), A
-
 __OneByteCombine:
+
+LD (__OneByteComboOperation), A
 
 LD A, D
 
 __OneByteComboOperation:
 
-AND E
+OR E
 
 LD C, A
 
@@ -42024,9 +42070,17 @@ LD (__TwoBytesHighOperation), A
 
 LD (__TwoBytesLowOperation), A
 
-__WriteTwoBytes:
 
-PUSH BC
+
+LD A, E
+
+LD (__TwoByteMasks), A
+
+LD A, D
+
+LD (__TwoByteMasks+1), A
+
+__WriteTwoBytes:
 
 LD A, D
 
@@ -42046,11 +42100,13 @@ OR (HL)
 
 LD (HL), A
 
-LD BC, Screen.WidthBytes - 1
+LD DE, Screen.WidthBytes - 1
 
-ADD HL, BC
+ADD HL, DE
 
-POP BC
+__TwoByteMasks = $+1
+
+LD DE, 0
 
 DJNZ __WriteTwoBytes
 
@@ -42086,11 +42142,11 @@ CP C
 
 RET NC
 
-
-
 LD A, D
 
 PUSH HL
+
+
 
 
 
@@ -42518,6 +42574,8 @@ DivHLBy10:
 
 XOR A
 AF 
+
+
 ADD HL, HL
 29 
 RLA
@@ -42530,6 +42588,10 @@ ADD HL, HL
 29 
 RLA
 17 
+
+
+
+
 LD B, 13
 06 0D 
 LD C, 10
@@ -42567,7 +42629,7 @@ C9
 ConvertHLToDigitString:
 
 LD DE, __Digits + 5
-11 2C A0 
+11 2B A0 
 LD C, 0
 0E 00 
 LD B, C
@@ -42577,7 +42639,7 @@ __ConvertHLToDigitStringLoop:
 PUSH BC
 C5 
 CALL Math.DivHLBy10
-CD FB 9F 
+CD FA 9F 
 POP BC
 C1 
 ADD A, '0'
@@ -42619,7 +42681,7 @@ E5
 LD A, (HL)
 7E 
 CALL Glyph.GetGlyphSpriteAddr
-CD 91 9F 
+CD 90 9F 
 LD A, (HL)
 7E 
 ADD A, C
@@ -42653,7 +42715,7 @@ D5
 PUSH DE
 D5 
 CALL Glyph.GetGlyphSpriteAddr
-CD 91 9F 
+CD 90 9F 
 LD C, (HL)
 4E 
 POP DE
@@ -42661,7 +42723,7 @@ D1
 PUSH BC
 C5 
 CALL Graphics.DrawSprite
-CD F8 9E 
+CD F7 9E 
 POP BC
 C1 
 POP DE
@@ -42775,17 +42837,17 @@ Row1Selections:
 OneCellSelection = ( $ - Row1Selections ) / 2
 
 .dw OneCellStr
-05 A1 
+04 A1 
 OneCellInverseSelection = ( $ - Row1Selections ) / 2
 
 .dw OneCellInverseStr
-0E A1 
+0D A1 
 RandomSelection:
 
 RandomSelectionIndex = ( $ - Row1Selections ) / 2
 
 .dw RandomStr
-20 A1 
+1F A1 
 Row1LastIndex = ( $ - 2 - Row1Selections ) / 2
 
 
@@ -42801,15 +42863,15 @@ Row2Selections:
 CenterSelection = ( $ - Row2Selections ) / 2
 
 .dw CenterStr
-2C A1 
+2B A1 
 RightSelection = ( $ - Row2Selections ) / 2
 
 .dw RightStr
-33 A1 
+32 A1 
 LeftSelection = ( $ - Row2Selections ) / 2
 
 .dw LeftStr
-27 A1 
+26 A1 
 Row2LastIndex = ( $ - 2 - Row2Selections ) / 2
 
 
@@ -42823,19 +42885,19 @@ Row3Selections:
 WrapSelection = ( $ - Row3Selections ) / 2
 
 .dw WrapStr
-50 A1 
+4F A1 
 MatchEdgeSelection = ( $ - Row3Selections ) / 2
 
 .dw MatchEdgeStr
-45 A1 
+44 A1 
 BlackSelection = ( $ - Row3Selections ) / 2
 
 .dw BlackStr
-39 A1 
+38 A1 
 WhiteSelection = ( $ - Row3Selections ) / 2
 
 .dw WhiteStr
-3F A1 
+3E A1 
 Row3LastIndex = ( $ - 2 - Row3Selections ) / 2
 
 
@@ -42955,11 +43017,11 @@ lbps('Wrap')
 UpdateSeed:
 
 LD HL, (Seed)
-2A 5E A1 
+2A 5D A1 
 INC HL
 23 
 LD (Seed), HL
-22 5E A1 
+22 5D A1 
 RET
 C9 
 GenerateWord:
@@ -42983,7 +43045,7 @@ INC L
 ADD HL, DE
 19 
 LD (Seed), HL
-22 5E A1 
+22 5D A1 
 Seed2 = $+1
 
 LD HL, 25771
@@ -42999,7 +43061,7 @@ AD
 LD L, A
 6F 
 LD (Seed2), HL
-22 6A A1 
+22 69 A1 
 ADD HL, DE
 19 
 RET
@@ -43120,6 +43182,18 @@ RET
 
 
 
+DrawRectWhite = 0
+
+DrawRectBlack = 1
+
+DrawRectXor = 2
+
+DrawRectWhiteOpcode = Opcode.AndHL
+
+DrawRectBlackOpcode = Opcode.OrHL
+
+DrawRectXorOpcode = Opcode.XorHL
+
 DrawRect:
 
 XOR A
@@ -43172,41 +43246,37 @@ LD C, H
 
 LD A, B
 
-CP 0
+CP DrawRectWhite
 
-JR Z, __SetOperationAnd
+JR Z, __SetOperationWhite
 
-CP 1
+CP DrawRectBlack
 
-JR Z, __SetOperationOr
+JR Z, __SetOperationBlack
 
-CP 2
+CP DrawRectXor
 
 JR Z, __SetOperationXor
 
-__SetOperationOr:
+__SetOperationBlack:
 
-LD A, Opcode.OrHL
+LD A, DrawRectBlackOpcode
 
-LD (__Operation), A
+JR __SaveOperation
 
-JR __FindScreenAddress
+__SetOperationWhite:
 
-__SetOperationAnd:
+LD A, DrawRectWhiteOpcode
 
-LD A, Opcode.AndHL
-
-LD (__Operation), A
-
-JR __FindScreenAddress
+JR __SaveOperation
 
 __SetOperationXor:
 
-LD A, Opcode.XorHL
+LD A, DrawRectXorOpcode
+
+__SaveOperation:
 
 LD (__Operation), A
-
-__FindScreenAddress:
 
 
 
@@ -43250,13 +43320,15 @@ LD D, B
 
 LD E, A
 
-LD B, A
+
 
 OR A
 
 LD A, $FF
 
-JR Z, $+6
+JR Z, $+7
+
+LD B, E
 
 __ShiftHighMask:
 
@@ -43310,9 +43382,11 @@ LD C, 0
 
 LD A, C
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, __NoInvertMasks
+
+
 
 LD A, D
 
@@ -43360,6 +43434,8 @@ LD A, Screen.WidthBytes - 1
 
 SUB B
 
+
+
 LD (__MultiByteRowSpan), A
 
 LD A, C
@@ -43374,7 +43450,7 @@ __MultiByteSetHeight = $+1
 
 LD C, 0
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, _WriteMultiByteNotWhite
 
@@ -43393,6 +43469,8 @@ LD (__MultiByteMiddleValue), A
 __WriteMultiByte:
 
 PUSH BC
+
+
 
 LD A, D
 
@@ -43420,6 +43498,8 @@ INC HL
 
 DJNZ __MiddleByteLoop
 
+
+
 LD A, E
 
 __MultiByteLowOperation:
@@ -43430,9 +43510,11 @@ LD (HL), A
 
 __MultiByteRowSpan = $+1
 
-LD BC, 0
+LD C, 0
 
 ADD HL, BC
+
+
 
 POP BC
 
@@ -43448,13 +43530,11 @@ LD A, C
 
 LD (__OneByteOperation), A
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, __OneByteNotWhite
 
 LD A, Opcode.OrE
-
-LD (__OneByteComboOperation), A
 
 JR __OneByteCombine
 
@@ -43462,15 +43542,15 @@ __OneByteNotWhite:
 
 LD A, Opcode.AndE
 
-LD (__OneByteComboOperation), A
-
 __OneByteCombine:
+
+LD (__OneByteComboOperation), A
 
 LD A, D
 
 __OneByteComboOperation:
 
-AND E
+OR E
 
 LD C, A
 
@@ -43500,9 +43580,17 @@ LD (__TwoBytesHighOperation), A
 
 LD (__TwoBytesLowOperation), A
 
-__WriteTwoBytes:
 
-PUSH BC
+
+LD A, E
+
+LD (__TwoByteMasks), A
+
+LD A, D
+
+LD (__TwoByteMasks+1), A
+
+__WriteTwoBytes:
 
 LD A, D
 
@@ -43522,11 +43610,13 @@ OR (HL)
 
 LD (HL), A
 
-LD BC, Screen.WidthBytes - 1
+LD DE, Screen.WidthBytes - 1
 
-ADD HL, BC
+ADD HL, DE
 
-POP BC
+__TwoByteMasks = $+1
+
+LD DE, 0
 
 DJNZ __WriteTwoBytes
 
@@ -43562,11 +43652,11 @@ CP C
 
 RET NC
 
-
-
 LD A, D
 
 PUSH HL
+
+
 
 
 
@@ -43794,19 +43884,19 @@ VisualizeRule:
 
 OR A
 B7 
-LD HL, __DrawThreeJump
-21 D3 A1 
-JR Z, __NoSkipDrawThree
+LD HL, __DrawNeighborhoodJump
+21 D2 A1 
+JR Z, __NoSkipDrawNeighborhood
 28 05 
-LD DE, __SkipDrawThree
-11 17 A2 
-JR __WriteDrawThreeJump
+LD DE, __SkipDrawNeighborhood
+11 16 A2 
+JR __WriteDrawNeighborhoodJump
 18 03 
-__NoSkipDrawThree:
+__NoSkipDrawNeighborhood:
 
-LD DE, __StartDrawThree
-11 D5 A1 
-__WriteDrawThreeJump:
+LD DE, __StartDrawNeighborhood
+11 D4 A1 
+__WriteDrawNeighborhoodJump:
 
 LD (HL), E
 73 
@@ -43819,13 +43909,13 @@ LD DE, $0324
 LD C, 4
 0E 04 
 CALL __VisualizeRuleHalf
-CD 99 A1 
+CD 98 A1 
 LD DE, $0333
 11 33 03 
 LD C, 0
 0E 00 
 CALL __VisualizeRuleHalf
-CD 99 A1 
+CD 98 A1 
 RET
 C9 
 __VisualizeRuleHalf:
@@ -43869,19 +43959,19 @@ DJNZ __VisualizeRuleBitShift
 __VisualizeRuleCompareBit:
 
 LD HL, Globals.CARule
-21 D4 A0 
+21 D3 A0 
 AND (HL)
 A6 
 JR NZ, __FilledRuleBit:
 20 05 
 LD HL, Graphics.EmptySquareSprite
-21 70 9F 
+21 6F 9F 
 JR __DrawRuleBit
 18 03 
 __FilledRuleBit:
 
 LD HL, Graphics.FilledSquareSprite
-21 76 9F 
+21 75 9F 
 __DrawRuleBit:
 
 LD A, C
@@ -43913,7 +44003,7 @@ D1
 POP HL
 E1 
 CALL Graphics.DrawSprite
-CD F8 9E 
+CD F7 9E 
 POP AF
 F1 
 POP DE
@@ -43922,11 +44012,11 @@ POP BC
 C1 
 
 
-__DrawThreeJump = $+1
+__DrawNeighborhoodJump = $+1
 
-JP __StartDrawThree
-C3 D5 A1 
-__StartDrawThree:
+JP __StartDrawNeighborhood
+C3 D4 A1 
+__StartDrawNeighborhood:
 
 PUSH AF
 F5 
@@ -43943,9 +44033,9 @@ ADD HL, BC
 EX DE, HL
 EB 
 LD HL, Graphics.DashSprite
-21 7C 9F 
+21 7B 9F 
 CALL Graphics.DrawSprite
-CD F8 9E 
+CD F7 9E 
 POP DE
 D1 
 POP BC
@@ -43962,20 +44052,20 @@ RRC A
 CB 0F 
 LD B, 3
 06 03 
-__DrawThreeLoop:
+__DrawNeighborhoodLoop:
 
 RLA
 17 
 JR C, __FilledSquare
 38 05 
 LD HL, Graphics.EmptySquareSprite
-21 70 9F 
+21 6F 9F 
 JR __DrawSprite
 18 03 
 __FilledSquare:
 
 LD HL, Graphics.FilledSquareSprite
-21 76 9F 
+21 75 9F 
 __DrawSprite:
 
 PUSH BC
@@ -43985,7 +44075,7 @@ D5
 PUSH AF
 F5 
 CALL Graphics.DrawSprite
-CD F8 9E 
+CD F7 9E 
 POP AF
 F1 
 POP DE
@@ -44000,9 +44090,9 @@ EX DE, HL
 EB 
 POP BC
 C1 
-DJNZ __DrawThreeLoop
+DJNZ __DrawNeighborhoodLoop
 10 E4 
-__EndDrawThree:
+__EndDrawNeighborhood:
 
 LD BC, $0300
 01 00 03 
@@ -44022,7 +44112,7 @@ JR NZ, __VisualizeRuleLoop
 20 85 
 RET
 C9 
-__SkipDrawThree:
+__SkipDrawNeighborhood:
 
 LD BC, $0F00
 01 00 0F 
@@ -44032,16 +44122,16 @@ ADD HL, BC
 09 
 EX DE, HL
 EB 
-JR __EndDrawThree
+JR __EndDrawNeighborhood
 18 EC 
 DrawCA:
 
 CALL Graphics.ClearScreenBuffer
 CD DA 9D 
 CALL DrawFirstRow
-CD 29 A2 
+CD 28 A2 
 CALL FillCA
-CD C5 A2 
+CD C4 A2 
 RET
 C9 
 
@@ -44049,7 +44139,7 @@ C9
 DrawFirstRow:
 
 LD A, (Globals.Row1Selection)
-3A 57 A0 
+3A 56 A0 
 CP Globals.OneCellSelection
 FE 00 
 JR Z, __DrawFirstRowOneCell
@@ -44063,9 +44153,9 @@ JR __DrawFirstRowRandom
 __DrawFirstRowOneCellInverse:
 
 CALL _DrawFirstRowFill
-CD B6 A2 
+CD B5 A2 
 LD A, (Globals.Row2Selection)
-3A 5E A0 
+3A 5D A0 
 CP Globals.LeftSelection
 FE 02 
 JR Z, __DrawFirstRowOneCellInverseLeft
@@ -44111,7 +44201,7 @@ C9
 __DrawFirstRowOneCell:
 
 LD A, (Globals.Row2Selection)
-3A 5E A0 
+3A 5D A0 
 CP Globals.LeftSelection
 FE 02 
 JR Z, __DrawFirstRowOneCellLeft
@@ -44157,7 +44247,7 @@ C9
 __DrawFirstRowRandom:
 
 LD A, (Globals.RandomSeedDensity)
-3A 6E A0 
+3A 6D A0 
 CP 100
 FE 64 
 JR Z, _DrawFirstRowFill
@@ -44167,13 +44257,13 @@ LD D, 0
 LD E, A
 5F 
 LD HL, Globals.PercentageTable
-21 6F A0 
+21 6E A0 
 ADD HL, DE
 19 
 LD A, (HL)
 7E 
 LD (_DensityThreshold), A
-32 A3 A2 
+32 A2 A2 
 LD C, Screen.WidthBytes
 0E 0C 
 LD HL, Screen.Address
@@ -44191,10 +44281,10 @@ _GenerateDensityByte:
 PUSH DE
 D5 
 CALL Random.GenerateWord
-CD 5D A1 
+CD 5C A1 
 POP DE
 D1 
-_DensityThreshold = $+1
+_DensityThreshoLD = $+1
 
 LD D, 0
 16 00 
@@ -44249,9 +44339,9 @@ C9
 FillCA:
 
 CALL CacheRule
-CD AC A3 
+CD AB A3 
 LD A, (Globals.Row3Selection)
-3A 65 A0 
+3A 64 A0 
 CP Globals.WrapSelection
 FE 00 
 JR Z, __CARowWrap
@@ -44269,39 +44359,39 @@ JR __CARowWhite
 __CARowWrap:
 
 LD DE, __CARowStartWrap
-11 13 A3 
+11 12 A3 
 LD BC, __CARowEndWrap
-01 5C A3 
+01 5B A3 
 JR __FillCARowStart
 18 19 
 __CARowMatchEdge:
 
 LD DE, __CARowStartMatchEdge
-11 21 A3 
+11 20 A3 
 LD BC, __CARowEndMatchEdge
-01 69 A3 
+01 68 A3 
 JR __FillCARowStart
 18 11 
 __CARowBlack:
 
 LD DE, __CARowStartBlack
-11 29 A3 
+11 28 A3 
 LD BC, __CARowEndBlack
-01 70 A3 
+01 6F A3 
 JR __FillCARowStart
 18 09 
 __CARowWhite:
 
 LD DE, __CARowStartWhite
-11 2D A3 
+11 2C A3 
 LD BC, __CARowEndWhite
-01 74 A3 
+01 73 A3 
 LD HL, RowStartJumpAddr
-21 11 A3 
+21 10 A3 
 __FillCARowStart:
 
 LD HL, RowStartJumpAddr
-21 11 A3 
+21 10 A3 
 LD A, E
 7B 
 LD (HL), A
@@ -44315,7 +44405,7 @@ LD (HL), A
 
 
 LD HL, RowEndJumpAddr
-21 5A A3 
+21 59 A3 
 LD A, C
 79 
 LD (HL), A
@@ -44339,7 +44429,7 @@ C5
 RowStartJumpAddr = $+1
 
 JP __CARowStartWrap
-C3 13 A3 
+C3 12 A3 
 __CARowStartWrap:
 
 LD DE, Screen.WidthBytes - 1
@@ -44409,7 +44499,7 @@ LD B, 7
 __InnerBitLoop:
 
 CALL CalculateRuleBit
-CD 92 A3 
+CD 91 A3 
 DJNZ __InnerBitLoop
 10 FB 
 LD B, L
@@ -44421,7 +44511,7 @@ INC HL
 LD C, (HL)
 4E 
 CALL CalculateRuleBit
-CD 92 A3 
+CD 91 A3 
 PUSH BC
 C5 
 LD BC, Screen.WidthBytes - 2
@@ -44443,7 +44533,7 @@ DEC HL
 RowEndJumpAddr = $+1
 
 JP __CARowEndWrap
-C3 5C A3 
+C3 5B A3 
 __CARowEndWrap:
 
 PUSH DE
@@ -44497,7 +44587,7 @@ LD B, 8
 __InnerBitLoopLastByte:
 
 CALL CalculateRuleBit
-CD 92 A3 
+CD 91 A3 
 DJNZ __InnerBitLoopLastByte
 10 FB 
 LD BC, Screen.WidthBytes
@@ -44545,7 +44635,7 @@ E5
 LD D, 0
 16 00 
 LD HL, CARuleBitCache
-21 BE A3 
+21 BD A3 
 ADD HL, DE
 19 
 LD A, (HL)
@@ -44565,9 +44655,9 @@ C9
 CacheRule:
 
 LD HL, CARuleBitCache
-21 BE A3 
+21 BD A3 
 LD A, (Globals.CARule)
-3A D4 A0 
+3A D3 A0 
 LD E, A
 5F 
 LD B, 8
@@ -54769,37 +54859,35 @@ JR Z, __NoKeyPressed
 LD HL, 0
 21 00 00 
 LD (__KeyUps), HL
-22 4C A4 
+22 4A A4 
 LD B, A
 47 
 LD A, (__DebouncedLastKey)
-3A 4E A4 
+3A 4C A4 
 CP B
 B8 
 JR NZ, __KeyChanged
-20 29 
+20 28 
 LD HL, (__Bounces)
-2A 4F A4 
+2A 4D A4 
 LD A, H
 7C 
 CP $0F
 FE 0F 
 JR NC, __ProcessKey
-30 2B 
+30 2A 
 INC HL
 23 
 LD (__Bounces), HL
-22 4F A4 
+22 4D A4 
 XOR A
 AF 
 RET
 C9 
 __NoKeyPressed:
 
-XOR A
-AF 
 LD HL, (__KeyUps)
-2A 4C A4 
+2A 4A A4 
 LD A, H
 7C 
 CP $02
@@ -54809,7 +54897,7 @@ JR NC, __DefiniteKeyUp
 INC HL
 23 
 LD (__KeyUps), HL
-22 4C A4 
+22 4A A4 
 XOR A
 AF 
 RET
@@ -54821,9 +54909,9 @@ LD A, $FF
 SBC HL, HL
 ED 62 
 LD (__DebouncedLastKey), A
-32 4E A4 
+32 4C A4 
 LD (__Bounces), HL
-22 4F A4 
+22 4D A4 
 XOR A
 AF 
 RET
@@ -54833,11 +54921,11 @@ __KeyChanged:
 LD A, B
 78 
 LD (__DebouncedLastKey), A
-32 4E A4 
+32 4C A4 
 LD HL, 0
 21 00 00 
 LD (__Bounces), HL
-22 4F A4 
+22 4D A4 
 __ProcessKey:
 
 LD A, B
@@ -55090,6 +55178,18 @@ RET
 
 
 
+DrawRectWhite = 0
+
+DrawRectBlack = 1
+
+DrawRectXor = 2
+
+DrawRectWhiteOpcode = Opcode.AndHL
+
+DrawRectBlackOpcode = Opcode.OrHL
+
+DrawRectXorOpcode = Opcode.XorHL
+
 DrawRect:
 
 XOR A
@@ -55142,41 +55242,37 @@ LD C, H
 
 LD A, B
 
-CP 0
+CP DrawRectWhite
 
-JR Z, __SetOperationAnd
+JR Z, __SetOperationWhite
 
-CP 1
+CP DrawRectBlack
 
-JR Z, __SetOperationOr
+JR Z, __SetOperationBlack
 
-CP 2
+CP DrawRectXor
 
 JR Z, __SetOperationXor
 
-__SetOperationOr:
+__SetOperationBlack:
 
-LD A, Opcode.OrHL
+LD A, DrawRectBlackOpcode
 
-LD (__Operation), A
+JR __SaveOperation
 
-JR __FindScreenAddress
+__SetOperationWhite:
 
-__SetOperationAnd:
+LD A, DrawRectWhiteOpcode
 
-LD A, Opcode.AndHL
-
-LD (__Operation), A
-
-JR __FindScreenAddress
+JR __SaveOperation
 
 __SetOperationXor:
 
-LD A, Opcode.XorHL
+LD A, DrawRectXorOpcode
+
+__SaveOperation:
 
 LD (__Operation), A
-
-__FindScreenAddress:
 
 
 
@@ -55220,13 +55316,15 @@ LD D, B
 
 LD E, A
 
-LD B, A
+
 
 OR A
 
 LD A, $FF
 
-JR Z, $+6
+JR Z, $+7
+
+LD B, E
 
 __ShiftHighMask:
 
@@ -55280,9 +55378,11 @@ LD C, 0
 
 LD A, C
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, __NoInvertMasks
+
+
 
 LD A, D
 
@@ -55330,6 +55430,8 @@ LD A, Screen.WidthBytes - 1
 
 SUB B
 
+
+
 LD (__MultiByteRowSpan), A
 
 LD A, C
@@ -55344,7 +55446,7 @@ __MultiByteSetHeight = $+1
 
 LD C, 0
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, _WriteMultiByteNotWhite
 
@@ -55363,6 +55465,8 @@ LD (__MultiByteMiddleValue), A
 __WriteMultiByte:
 
 PUSH BC
+
+
 
 LD A, D
 
@@ -55390,6 +55494,8 @@ INC HL
 
 DJNZ __MiddleByteLoop
 
+
+
 LD A, E
 
 __MultiByteLowOperation:
@@ -55400,9 +55506,11 @@ LD (HL), A
 
 __MultiByteRowSpan = $+1
 
-LD BC, 0
+LD C, 0
 
 ADD HL, BC
+
+
 
 POP BC
 
@@ -55418,13 +55526,11 @@ LD A, C
 
 LD (__OneByteOperation), A
 
-CP Opcode.AndHL
+CP DrawRectWhiteOpcode
 
 JR NZ, __OneByteNotWhite
 
 LD A, Opcode.OrE
-
-LD (__OneByteComboOperation), A
 
 JR __OneByteCombine
 
@@ -55432,15 +55538,15 @@ __OneByteNotWhite:
 
 LD A, Opcode.AndE
 
-LD (__OneByteComboOperation), A
-
 __OneByteCombine:
+
+LD (__OneByteComboOperation), A
 
 LD A, D
 
 __OneByteComboOperation:
 
-AND E
+OR E
 
 LD C, A
 
@@ -55470,9 +55576,17 @@ LD (__TwoBytesHighOperation), A
 
 LD (__TwoBytesLowOperation), A
 
-__WriteTwoBytes:
 
-PUSH BC
+
+LD A, E
+
+LD (__TwoByteMasks), A
+
+LD A, D
+
+LD (__TwoByteMasks+1), A
+
+__WriteTwoBytes:
 
 LD A, D
 
@@ -55492,11 +55606,13 @@ OR (HL)
 
 LD (HL), A
 
-LD BC, Screen.WidthBytes - 1
+LD DE, Screen.WidthBytes - 1
 
-ADD HL, BC
+ADD HL, DE
 
-POP BC
+__TwoByteMasks = $+1
+
+LD DE, 0
 
 DJNZ __WriteTwoBytes
 
@@ -55532,11 +55648,11 @@ CP C
 
 RET NC
 
-
-
 LD A, D
 
 PUSH HL
+
+
 
 
 
@@ -56135,7 +56251,7 @@ D5
 PUSH HL
 E5 
 CALL DrawRowLabel
-CD E6 A4 
+CD E4 A4 
 POP HL
 E1 
 POP DE
@@ -56157,7 +56273,7 @@ C5
 PUSH DE
 D5 
 CALL DrawMiddle
-CD 06 A5 
+CD 04 A5 
 POP DE
 D1 
 POP BC
@@ -56175,7 +56291,7 @@ F5
 PUSH DE
 D5 
 CALL DrawRowSelection
-CD 81 A4 
+CD 7F A4 
 POP DE
 D1 
 POP AF
@@ -56189,7 +56305,7 @@ JR Z, __RowRectEnd
 AND RowFlags.RowIndexMask
 E6 03 
 CALL DrawRowRect
-CD 3C A5 
+CD 3A A5 
 __RowRectEnd:
 
 RET
@@ -56205,7 +56321,7 @@ F5
 PUSH HL
 E5 
 CALL String.GetWidth
-CD 2D A0 
+CD 2C A0 
 LD B, A
 47 
 POP HL
@@ -56279,7 +56395,7 @@ E5
 LD A, Character.LeftArrow
 3E CF 
 CALL Glyph.GetGlyphSpriteAddr
-CD 91 9F 
+CD 90 9F 
 LD A, B
 78 
 ADD A, ArrowsWidth
@@ -56299,19 +56415,19 @@ D5
 PUSH BC
 C5 
 CALL Graphics.DrawSprite
-CD F8 9E 
+CD F7 9E 
 POP BC
 C1 
 LD A, Character.RightArrow
 3E 05 
 CALL Glyph.GetGlyphSpriteAddr
-CD 91 9F 
+CD 90 9F 
 LD D, Screen.Width - 7
 16 59 
 LD E, C
 59 
 CALL Graphics.DrawSprite
-CD F8 9E 
+CD F7 9E 
 POP DE
 D1 
 POP HL
@@ -56337,7 +56453,7 @@ LD E, C
 __EndDrawRowArrows:
 
 CALL String.Draw
-CD 3E A0 
+CD 3D A0 
 RET
 C9 
 DrawRowLabel:
@@ -56367,7 +56483,7 @@ D5
 PUSH DE
 D5 
 CALL String.GetWidth
-CD 2D A0 
+CD 2C A0 
 POP DE
 D1 
 LD H, A
@@ -56383,7 +56499,7 @@ D1
 POP HL
 E1 
 CALL String.Draw
-CD 3E A0 
+CD 3D A0 
 RET
 C9 
 DrawMiddle:
@@ -56397,7 +56513,7 @@ E5
 PUSH DE
 D5 
 CALL String.GetWidth
-CD 2D A0 
+CD 2C A0 
 POP DE
 D1 
 LD B, A
@@ -56409,7 +56525,7 @@ D5
 PUSH BC
 C5 
 CALL String.GetWidth
-CD 2D A0 
+CD 2C A0 
 POP BC
 C1 
 LD C, A
@@ -56723,43 +56839,45 @@ SameRowFlags = UI.RowFlags.RenderSelection | UI.RowFlags.RenderSelectionArrows
 Main:
 
 CALL Glyph.CreateGlyphTable
-CD 7F 9F 
+CD 7E 9F 
 CALL Glyph.LoadGlyphs
-CD A0 9F 
+CD 9F 9F 
+
+
 CALL Graphics.ClearScreenBuffer
 CD DA 9D 
 CALL _LoadRow0Strings
-CD 6F A7 
+CD 6D A7 
 LD A, 0 | InitialRowSelectedFlags
 3E 3C 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 CALL _LoadRow1Strings
-CD 95 A7 
+CD 93 A7 
 LD A, 1 | InitialRowDeselectedFlags
 3E 0D 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 CALL _LoadRow2Strings
-CD CE A7 
+CD CC A7 
 LD A, 2 | InitialRowDeselectedFlags
 3E 0E 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 CALL _LoadRow3Strings
-CD 10 A8 
+CD 0E A8 
 LD A, 3 | InitialRowDeselectedFlags
 3E 0F 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 LD A, 0
 3E 00 
 CALL CARule.VisualizeRule
-CD 77 A1 
+CD 76 A1 
 CALL _DrawOkButton
-CD AC A5 
+CD AA A5 
 CALL _FillOkButton
-CD C1 A5 
+CD BF A5 
 _DrawBuf:
 
 CALL Graphics.WriteScreenBuffer
@@ -56767,23 +56885,23 @@ CD A8 9D
 _KeyLoop:
 
 CALL Random.UpdateSeed
-CD 55 A1 
+CD 54 A1 
 CALL Input.ReadArrow
-CD E3 A3 
+CD E2 A3 
 HandlerAddr = $+1
 
 JP _HandlerRow0
-C3 D6 A5 
+C3 D4 A5 
 __EndMain:
 
 CALL CARule.DrawCA
-CD 1F A2 
+CD 1E A2 
 rst 28h
 EF 
 .dw _GetKey
 72 49 
 CALL Glyph.DeleteGlyphTable
-CD D9 9F 
+CD D8 9F 
 CALL Graphics.ClearScreenBuffer
 CD DA 9D 
 RET
@@ -56799,11 +56917,11 @@ LD B, 1
 CALL Graphics.DrawRect
 CD E8 9D 
 LD HL, Globals.OkStr
-21 02 A1 
+21 01 A1 
 LD DE, $5425
 11 25 54 
 CALL String.Draw
-CD 3E A0 
+CD 3D A0 
 RET
 C9 
 _FillOkButton:
@@ -56821,7 +56939,7 @@ C9
 _ChangeHandler:
 
 LD HL, HandlerAddr
-21 9D A5 
+21 9B A5 
 LD A, E
 7B 
 LD (HL), A
@@ -56855,63 +56973,63 @@ FE 01
 JR Z, _Row0Down
 28 3A 
 JP _KeyLoop
-C3 96 A5 
+C3 94 A5 
 _Row0Right:
 
 LD A, (Globals.CARule)
-3A D4 A0 
+3A D3 A0 
 INC A
 3C 
 LD (Globals.CARule), A
-32 D4 A0 
+32 D3 A0 
 LD A, 1
 3E 01 
 CALL CARule.VisualizeRule
-CD 77 A1 
+CD 76 A1 
 CALL _LoadRow0Strings
-CD 6F A7 
+CD 6D A7 
 LD A, 0 | SameRowFlags
 3E 28 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row0Left:
 
 LD A, (Globals.CARule)
-3A D4 A0 
+3A D3 A0 
 DEC A
 3D 
 LD (Globals.CARule), A
-32 D4 A0 
+32 D3 A0 
 LD A, 1
 3E 01 
 CALL CARule.VisualizeRule
-CD 77 A1 
+CD 76 A1 
 CALL _LoadRow0Strings
-CD 6F A7 
+CD 6D A7 
 LD A, 0 | SameRowFlags
 3E 28 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row0Up:
 
 CALL _DeselectRow0
-CD 66 A7 
+CD 64 A7 
 CALL _SelectOkButton
-CD 25 A8 
+CD 23 A8 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row0Down:
 
 CALL _DeselectRow0
-CD 66 A7 
+CD 64 A7 
 CALL _SelectRow1
-CD 7D A7 
+CD 7B A7 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 
 
 _HandlerRow1:
@@ -56933,11 +57051,11 @@ FE 01
 JR Z, _Row1Down
 28 43 
 JP _KeyLoop
-C3 96 A5 
+C3 94 A5 
 _Row1Right:
 
 LD A, (Globals.Row1Selection)
-3A 57 A0 
+3A 56 A0 
 LD B, A
 47 
 INC A
@@ -56953,7 +57071,7 @@ JR __UpdateRow1
 _Row1Left:
 
 LD A, (Globals.Row1Selection)
-3A 57 A0 
+3A 56 A0 
 LD B, A
 47 
 SUB 1
@@ -56965,7 +57083,7 @@ LD A, Globals.Row1LastIndex
 __UpdateRow1:
 
 LD (Globals.Row1Selection), A
-32 57 A0 
+32 56 A0 
 CP Globals.RandomSelectionIndex
 FE 02 
 JR Z, __Row1RerenderRow2
@@ -56979,39 +57097,39 @@ JR Z, __Row1RerenderRow2
 __RenderRow1:
 
 CALL _LoadRow1Strings
-CD 95 A7 
+CD 93 A7 
 LD A, 1 | SameRowFlags
 3E 29 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 __Row1RerenderRow2:
 
 CALL _LoadRow2Strings
-CD CE A7 
+CD CC A7 
 LD A, 2 | InitialRowDeselectedFlags
 3E 0E 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 JR __RenderRow1
 18 EB 
 _Row1Up:
 
 CALL _DeselectRow1
-CD 8C A7 
+CD 8A A7 
 CALL _SelectRow0
-CD 57 A7 
+CD 55 A7 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row1Down:
 
 CALL _DeselectRow1
-CD 8C A7 
+CD 8A A7 
 CALL _SelectRow2
-CD AA A7 
+CD A8 A7 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _HandlerRow2Random:
 
 CP skRight
@@ -57045,11 +57163,11 @@ FE 01
 JR Z, _Row2Down
 28 4B 
 JP _KeyLoop
-C3 96 A5 
+C3 94 A5 
 _Row2RightPosition:
 
 LD A, (Globals.Row2Selection)
-3A 5E A0 
+3A 5D A0 
 INC A
 3C 
 CP Globals.Row2LastIndex + 1
@@ -57063,7 +57181,7 @@ JR __UpdateRow2Position
 _Row2LeftPosition:
 
 LD A, (Globals.Row2Selection)
-3A 5E A0 
+3A 5D A0 
 SUB 1
 D6 01 
 JR NC, __UpdateRow2Position
@@ -57075,11 +57193,11 @@ JR __UpdateRow2Position
 _Row2RightRandom:
 
 LD A, (Globals.RandomSeedDensity)
-3A 6E A0 
+3A 6D A0 
 CP 100
 FE 64 
 JP Z, _KeyLoop
-CA 96 A5 
+CA 94 A5 
 INC A
 3C 
 JR __UpdateRow2Random
@@ -57087,11 +57205,11 @@ JR __UpdateRow2Random
 _Row2LeftRandom:
 
 LD A, (Globals.RandomSeedDensity)
-3A 6E A0 
+3A 6D A0 
 CP 0
 FE 00 
 JP Z, _KeyLoop
-CA 96 A5 
+CA 94 A5 
 DEC A
 3D 
 JR __UpdateRow2Random
@@ -57099,39 +57217,39 @@ JR __UpdateRow2Random
 __UpdateRow2Position:
 
 LD (Globals.Row2Selection), A
-32 5E A0 
+32 5D A0 
 JR __UpdateRow2
 18 03 
 __UpdateRow2Random:
 
 LD (Globals.RandomSeedDensity), A
-32 6E A0 
+32 6D A0 
 __UpdateRow2:
 
 CALL _LoadRow2Strings
-CD CE A7 
+CD CC A7 
 LD A, 2 | SameRowFlags
 3E 2A 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row2Up:
 
 CALL _DeselectRow2
-CD C5 A7 
+CD C3 A7 
 CALL _SelectRow1
-CD 7D A7 
+CD 7B A7 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row2Down:
 
 CALL _DeselectRow2
-CD C5 A7 
+CD C3 A7 
 CALL _SelectRow3
-CD F8 A7 
+CD F6 A7 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 
 
 _HandlerRow3:
@@ -57153,11 +57271,11 @@ FE 01
 JR Z, _Row3Down
 28 26 
 JP _KeyLoop
-C3 96 A5 
+C3 94 A5 
 _Row3Right:
 
 LD A, (Globals.Row3Selection)
-3A 65 A0 
+3A 64 A0 
 INC A
 3C 
 JR __UpdateRow3
@@ -57165,7 +57283,7 @@ JR __UpdateRow3
 _Row3Left:
 
 LD A, (Globals.Row3Selection)
-3A 65 A0 
+3A 64 A0 
 DEC A
 3D 
 __UpdateRow3:
@@ -57173,31 +57291,31 @@ __UpdateRow3:
 AND 3
 E6 03 
 LD (Globals.Row3Selection), A
-32 65 A0 
+32 64 A0 
 CALL _LoadRow3Strings
-CD 10 A8 
+CD 0E A8 
 LD A, 3 | SameRowFlags
 3E 2B 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row3Up:
 
 CALL _DeselectRow3
-CD 07 A8 
+CD 05 A8 
 CALL _SelectRow2
-CD AA A7 
+CD A8 A7 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _Row3Down:
 
 CALL _DeselectRow3
-CD 07 A8 
+CD 05 A8 
 CALL _SelectOkButton
-CD 25 A8 
+CD 23 A8 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 
 
 _HandlerOkButton:
@@ -57211,41 +57329,41 @@ FE 01
 JR Z, _OkButtonDown
 28 14 
 CALL Input.ReadEnter
-CD C6 A3 
+CD C5 A3 
 CP skEnter
 FE 09 
 JP Z, __EndMain
-CA 9F A5 
+CA 9D A5 
 JP _KeyLoop
-C3 96 A5 
+C3 94 A5 
 _OkButtonUp:
 
 CALL _SelectRow3
-CD F8 A7 
+CD F6 A7 
 CALL _FillOkButton
-CD C1 A5 
+CD BF A5 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _OkButtonDown:
 
 CALL _SelectRow0
-CD 57 A7 
+CD 55 A7 
 CALL _FillOkButton
-CD C1 A5 
+CD BF A5 
 JP _DrawBuf
-C3 93 A5 
+C3 91 A5 
 _SelectRow0:
 
 CALL _LoadRow0Strings
-CD 6F A7 
+CD 6D A7 
 LD A, 0 | SelectRowFlags
 3E 38 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 LD DE, _HandlerRow0
-11 D6 A5 
+11 D4 A5 
 CALL _ChangeHandler
-CD CD A5 
+CD CB A5 
 RET
 C9 
 
@@ -57253,27 +57371,27 @@ C9
 _DeselectRow0:
 
 CALL _LoadRow0Strings
-CD 6F A7 
+CD 6D A7 
 LD A, 0 | DeselectRowFlags
 3E 18 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 RET
 C9 
 _LoadRow0Strings:
 
 LD A, (Globals.CARule)
-3A D4 A0 
+3A D3 A0 
 LD H, 0
 26 00 
 LD L, A
 6F 
 CALL String.ConvertHLToDigitString
-CD 10 A0 
+CD 0F A0 
 EX DE, HL
 EB 
 LD HL, Globals.RuleStr
-21 D5 A0 
+21 D4 A0 
 RET
 C9 
 
@@ -57281,15 +57399,15 @@ C9
 _SelectRow1:
 
 CALL _LoadRow1Strings
-CD 95 A7 
+CD 93 A7 
 LD A, 1 | SelectRowFlags
 3E 39 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 LD DE, _HandlerRow1
-11 29 A6 
+11 27 A6 
 CALL _ChangeHandler
-CD CD A5 
+CD CB A5 
 RET
 C9 
 
@@ -57297,23 +57415,23 @@ C9
 _DeselectRow1:
 
 CALL _LoadRow1Strings
-CD 95 A7 
+CD 93 A7 
 LD A, 1 | DeselectRowFlags
 3E 19 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 RET
 C9 
 _LoadRow1Strings:
 
 LD DE, Globals.SeedStr
-11 DB A0 
+11 DA A0 
 LD HL, Globals.Row1Selections
-21 58 A0 
+21 57 A0 
 LD B, 0
 06 00 
 LD A, (Globals.Row1Selection)
-3A 57 A0 
+3A 56 A0 
 SLA A
 CB 27 
 LD C, A
@@ -57337,57 +57455,57 @@ C9
 _SelectRow2:
 
 CALL _LoadRow2Strings
-CD CE A7 
+CD CC A7 
 LD A, 2 | SelectRowFlags
 3E 3A 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 LD A, (Globals.Row1Selection)
-3A 57 A0 
+3A 56 A0 
 CP Globals.RandomSelectionIndex
 FE 02 
 JR Z, __SelectRow2Random
 28 05 
 LD DE, _HandlerRow2Position
-11 8F A6 
+11 8D A6 
 JR __SelectRow2Done
 18 03 
 __SelectRow2Random:
 
 LD DE, _HandlerRow2Random
-11 85 A6 
+11 83 A6 
 __SelectRow2Done:
 
 CALL _ChangeHandler
-CD CD A5 
+CD CB A5 
 RET
 C9 
 _DeselectRow2:
 
 CALL _LoadRow2Strings
-CD CE A7 
+CD CC A7 
 LD A, 2 | DeselectRowFlags
 3E 1A 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 RET
 C9 
 _LoadRow2Strings:
 
 LD A, (Globals.Row1Selection)
-3A 57 A0 
+3A 56 A0 
 CP Globals.RandomSelectionIndex
 FE 02 
 JR Z, __Row2RandomDensitySelected
 28 15 
 LD DE, Globals.PositionStr
-11 E1 A0 
+11 E0 A0 
 LD HL, Globals.Row2Selections
-21 5F A0 
+21 5E A0 
 LD B, 0
 06 00 
 LD A, (Globals.Row2Selection)
-3A 5E A0 
+3A 5D A0 
 SLA A
 CB 27 
 LD C, A
@@ -57409,15 +57527,15 @@ C9
 __Row2RandomDensitySelected:
 
 LD A, (Globals.RandomSeedDensity)
-3A 6E A0 
+3A 6D A0 
 LD H, 0
 26 00 
 LD L, A
 6F 
 CALL String.ConvertHLToDigitString
-CD 10 A0 
+CD 0F A0 
 LD DE, Globals.FilledPercentStr
-11 F2 A0 
+11 F1 A0 
 EX DE, HL
 EB 
 RET
@@ -57427,15 +57545,15 @@ C9
 _SelectRow3:
 
 CALL _LoadRow3Strings
-CD 10 A8 
+CD 0E A8 
 LD A, 3 | SelectRowFlags
 3E 3B 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 LD DE, _HandlerRow3
-11 F3 A6 
+11 F1 A6 
 CALL _ChangeHandler
-CD CD A5 
+CD CB A5 
 RET
 C9 
 
@@ -57443,23 +57561,23 @@ C9
 _DeselectRow3:
 
 CALL _LoadRow3Strings
-CD 10 A8 
+CD 0E A8 
 LD A, 3 | DeselectRowFlags
 3E 1B 
 CALL UI.DrawRow
-CD 51 A4 
+CD 4F A4 
 RET
 C9 
 _LoadRow3Strings:
 
 LD DE, Globals.EdgesStr
-11 EB A0 
+11 EA A0 
 LD HL, Globals.Row3Selections
-21 66 A0 
+21 65 A0 
 LD B, 0
 06 00 
 LD A, (Globals.Row3Selection)
-3A 65 A0 
+3A 64 A0 
 SLA A
 CB 27 
 LD C, A
@@ -57481,11 +57599,11 @@ C9
 _SelectOkButton:
 
 CALL _DrawOkButton
-CD AC A5 
+CD AA A5 
 LD DE, _HandlerOkButton
-11 32 A7 
+11 30 A7 
 CALL _ChangeHandler
-CD CD A5 
+CD CB A5 
 RET
 C9 
 
