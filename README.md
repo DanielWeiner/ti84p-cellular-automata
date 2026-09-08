@@ -3,7 +3,7 @@
 A TI84+ assembly program that explores 1-dimensional cellular automata
 
 ## Description
-This project builds builds a TI-84+ assembly program called `CA`, which demos all 256 []()
+This project builds builds a TI-84+ assembly program called `CA`, which demos all 256 [elementary cellular automata](https://en.wikipedia.org/wiki/Elementary_cellular_automaton).
 
 ## Building
 This project uses [Brass 3](https://github.com/benryves/Brass3) as its assembler, using Wine on Linux. The output is directed to the `E:\` drive in Wine, which must 
