@@ -10097,7 +10097,7 @@ EF
 .dw _RunIndicOff
 70 45 
 CALL Main.Main
-CD 5D A5 
+CD 5C A5 
 rst 28h
 EF 
 .dw _ClrScrnFull
@@ -42837,17 +42837,17 @@ Row1Selections:
 OneCellSelection = ( $ - Row1Selections ) / 2
 
 .dw OneCellStr
-04 A1 
+03 A1 
 OneCellInverseSelection = ( $ - Row1Selections ) / 2
 
 .dw OneCellInverseStr
-0D A1 
+0C A1 
 RandomSelection:
 
 RandomSelectionIndex = ( $ - Row1Selections ) / 2
 
 .dw RandomStr
-1F A1 
+1E A1 
 Row1LastIndex = ( $ - 2 - Row1Selections ) / 2
 
 
@@ -42863,15 +42863,15 @@ Row2Selections:
 CenterSelection = ( $ - Row2Selections ) / 2
 
 .dw CenterStr
-2B A1 
+2A A1 
 RightSelection = ( $ - Row2Selections ) / 2
 
 .dw RightStr
-32 A1 
+31 A1 
 LeftSelection = ( $ - Row2Selections ) / 2
 
 .dw LeftStr
-26 A1 
+25 A1 
 Row2LastIndex = ( $ - 2 - Row2Selections ) / 2
 
 
@@ -42885,19 +42885,19 @@ Row3Selections:
 WrapSelection = ( $ - Row3Selections ) / 2
 
 .dw WrapStr
-4F A1 
+4E A1 
 MatchEdgeSelection = ( $ - Row3Selections ) / 2
 
 .dw MatchEdgeStr
-44 A1 
+43 A1 
 BlackSelection = ( $ - Row3Selections ) / 2
 
 .dw BlackStr
-38 A1 
+37 A1 
 WhiteSelection = ( $ - Row3Selections ) / 2
 
 .dw WhiteStr
-3E A1 
+3D A1 
 Row3LastIndex = ( $ - 2 - Row3Selections ) / 2
 
 
@@ -42922,10 +42922,6 @@ PercentageTable:
 
 
 
-RandomSeedDensity:
-
-.db 50
-32 
 CARule:
 
 .db 30
@@ -43017,11 +43013,11 @@ lbps('Wrap')
 UpdateSeed:
 
 LD HL, (Seed)
-2A 5D A1 
+2A 5C A1 
 INC HL
 23 
 LD (Seed), HL
-22 5D A1 
+22 5C A1 
 RET
 C9 
 GenerateWord:
@@ -43045,7 +43041,7 @@ INC L
 ADD HL, DE
 19 
 LD (Seed), HL
-22 5D A1 
+22 5C A1 
 Seed2 = $+1
 
 LD HL, 25771
@@ -43061,7 +43057,7 @@ AD
 LD L, A
 6F 
 LD (Seed2), HL
-22 69 A1 
+22 68 A1 
 ADD HL, DE
 19 
 RET
@@ -43885,17 +43881,17 @@ VisualizeRule:
 OR A
 B7 
 LD HL, __DrawNeighborhoodJump
-21 D2 A1 
+21 D1 A1 
 JR Z, __NoSkipDrawNeighborhood
 28 05 
 LD DE, __SkipDrawNeighborhood
-11 16 A2 
+11 15 A2 
 JR __WriteDrawNeighborhoodJump
 18 03 
 __NoSkipDrawNeighborhood:
 
 LD DE, __StartDrawNeighborhood
-11 D4 A1 
+11 D3 A1 
 __WriteDrawNeighborhoodJump:
 
 LD (HL), E
@@ -43909,13 +43905,13 @@ LD DE, $0324
 LD C, 4
 0E 04 
 CALL __VisualizeRuleHalf
-CD 98 A1 
+CD 97 A1 
 LD DE, $0333
 11 33 03 
 LD C, 0
 0E 00 
 CALL __VisualizeRuleHalf
-CD 98 A1 
+CD 97 A1 
 RET
 C9 
 __VisualizeRuleHalf:
@@ -43959,7 +43955,7 @@ DJNZ __VisualizeRuleBitShift
 __VisualizeRuleCompareBit:
 
 LD HL, Globals.CARule
-21 D3 A0 
+21 D2 A0 
 AND (HL)
 A6 
 JR NZ, __FilledRuleBit:
@@ -44015,7 +44011,7 @@ C1
 __DrawNeighborhoodJump = $+1
 
 JP __StartDrawNeighborhood
-C3 D4 A1 
+C3 D3 A1 
 __StartDrawNeighborhood:
 
 PUSH AF
@@ -44129,9 +44125,9 @@ DrawCA:
 CALL Graphics.ClearScreenBuffer
 CD DA 9D 
 CALL DrawFirstRow
-CD 28 A2 
+CD 27 A2 
 CALL FillCA
-CD C4 A2 
+CD C3 A2 
 RET
 C9 
 
@@ -44153,7 +44149,7 @@ JR __DrawFirstRowRandom
 __DrawFirstRowOneCellInverse:
 
 CALL _DrawFirstRowFill
-CD B5 A2 
+CD B4 A2 
 LD A, (Globals.Row2Selection)
 3A 5D A0 
 CP Globals.LeftSelection
@@ -44263,7 +44259,7 @@ ADD HL, DE
 LD A, (HL)
 7E 
 LD (_DensityThreshold), A
-32 A2 A2 
+32 A1 A2 
 LD C, Screen.WidthBytes
 0E 0C 
 LD HL, Screen.Address
@@ -44281,7 +44277,7 @@ _GenerateDensityByte:
 PUSH DE
 D5 
 CALL Random.GenerateWord
-CD 5C A1 
+CD 5B A1 
 POP DE
 D1 
 _DensityThreshoLD = $+1
@@ -44339,7 +44335,7 @@ C9
 FillCA:
 
 CALL CacheRule
-CD AB A3 
+CD AA A3 
 LD A, (Globals.Row3Selection)
 3A 64 A0 
 CP Globals.WrapSelection
@@ -44359,39 +44355,39 @@ JR __CARowWhite
 __CARowWrap:
 
 LD DE, __CARowStartWrap
-11 12 A3 
+11 11 A3 
 LD BC, __CARowEndWrap
-01 5B A3 
+01 5A A3 
 JR __FillCARowStart
 18 19 
 __CARowMatchEdge:
 
 LD DE, __CARowStartMatchEdge
-11 20 A3 
+11 1F A3 
 LD BC, __CARowEndMatchEdge
-01 68 A3 
+01 67 A3 
 JR __FillCARowStart
 18 11 
 __CARowBlack:
 
 LD DE, __CARowStartBlack
-11 28 A3 
+11 27 A3 
 LD BC, __CARowEndBlack
-01 6F A3 
+01 6E A3 
 JR __FillCARowStart
 18 09 
 __CARowWhite:
 
 LD DE, __CARowStartWhite
-11 2C A3 
+11 2B A3 
 LD BC, __CARowEndWhite
-01 73 A3 
+01 72 A3 
 LD HL, RowStartJumpAddr
-21 10 A3 
+21 0F A3 
 __FillCARowStart:
 
 LD HL, RowStartJumpAddr
-21 10 A3 
+21 0F A3 
 LD A, E
 7B 
 LD (HL), A
@@ -44405,7 +44401,7 @@ LD (HL), A
 
 
 LD HL, RowEndJumpAddr
-21 59 A3 
+21 58 A3 
 LD A, C
 79 
 LD (HL), A
@@ -44429,7 +44425,7 @@ C5
 RowStartJumpAddr = $+1
 
 JP __CARowStartWrap
-C3 12 A3 
+C3 11 A3 
 __CARowStartWrap:
 
 LD DE, Screen.WidthBytes - 1
@@ -44499,7 +44495,7 @@ LD B, 7
 __InnerBitLoop:
 
 CALL CalculateRuleBit
-CD 91 A3 
+CD 90 A3 
 DJNZ __InnerBitLoop
 10 FB 
 LD B, L
@@ -44511,7 +44507,7 @@ INC HL
 LD C, (HL)
 4E 
 CALL CalculateRuleBit
-CD 91 A3 
+CD 90 A3 
 PUSH BC
 C5 
 LD BC, Screen.WidthBytes - 2
@@ -44533,7 +44529,7 @@ DEC HL
 RowEndJumpAddr = $+1
 
 JP __CARowEndWrap
-C3 5B A3 
+C3 5A A3 
 __CARowEndWrap:
 
 PUSH DE
@@ -44587,7 +44583,7 @@ LD B, 8
 __InnerBitLoopLastByte:
 
 CALL CalculateRuleBit
-CD 91 A3 
+CD 90 A3 
 DJNZ __InnerBitLoopLastByte
 10 FB 
 LD BC, Screen.WidthBytes
@@ -44635,7 +44631,7 @@ E5
 LD D, 0
 16 00 
 LD HL, CARuleBitCache
-21 BD A3 
+21 BC A3 
 ADD HL, DE
 19 
 LD A, (HL)
@@ -44655,9 +44651,9 @@ C9
 CacheRule:
 
 LD HL, CARuleBitCache
-21 BD A3 
+21 BC A3 
 LD A, (Globals.CARule)
-3A D3 A0 
+3A D2 A0 
 LD E, A
 5F 
 LD B, 8
@@ -54859,17 +54855,17 @@ JR Z, __NoKeyPressed
 LD HL, 0
 21 00 00 
 LD (__KeyUps), HL
-22 4A A4 
+22 49 A4 
 LD B, A
 47 
 LD A, (__DebouncedLastKey)
-3A 4C A4 
+3A 4B A4 
 CP B
 B8 
 JR NZ, __KeyChanged
 20 28 
 LD HL, (__Bounces)
-2A 4D A4 
+2A 4C A4 
 LD A, H
 7C 
 CP $0F
@@ -54879,7 +54875,7 @@ JR NC, __ProcessKey
 INC HL
 23 
 LD (__Bounces), HL
-22 4D A4 
+22 4C A4 
 XOR A
 AF 
 RET
@@ -54887,7 +54883,7 @@ C9
 __NoKeyPressed:
 
 LD HL, (__KeyUps)
-2A 4A A4 
+2A 49 A4 
 LD A, H
 7C 
 CP $02
@@ -54897,7 +54893,7 @@ JR NC, __DefiniteKeyUp
 INC HL
 23 
 LD (__KeyUps), HL
-22 4A A4 
+22 49 A4 
 XOR A
 AF 
 RET
@@ -54909,9 +54905,9 @@ LD A, $FF
 SBC HL, HL
 ED 62 
 LD (__DebouncedLastKey), A
-32 4C A4 
+32 4B A4 
 LD (__Bounces), HL
-22 4D A4 
+22 4C A4 
 XOR A
 AF 
 RET
@@ -54921,11 +54917,11 @@ __KeyChanged:
 LD A, B
 78 
 LD (__DebouncedLastKey), A
-32 4C A4 
+32 4B A4 
 LD HL, 0
 21 00 00 
 LD (__Bounces), HL
-22 4D A4 
+22 4C A4 
 __ProcessKey:
 
 LD A, B
@@ -56251,7 +56247,7 @@ D5
 PUSH HL
 E5 
 CALL DrawRowLabel
-CD E4 A4 
+CD E3 A4 
 POP HL
 E1 
 POP DE
@@ -56273,7 +56269,7 @@ C5
 PUSH DE
 D5 
 CALL DrawMiddle
-CD 04 A5 
+CD 03 A5 
 POP DE
 D1 
 POP BC
@@ -56291,7 +56287,7 @@ F5
 PUSH DE
 D5 
 CALL DrawRowSelection
-CD 7F A4 
+CD 7E A4 
 POP DE
 D1 
 POP AF
@@ -56305,7 +56301,7 @@ JR Z, __RowRectEnd
 AND RowFlags.RowIndexMask
 E6 03 
 CALL DrawRowRect
-CD 3A A5 
+CD 39 A5 
 __RowRectEnd:
 
 RET
@@ -56740,10 +56736,6 @@ PercentageTable:
 
 
 
-RandomSeedDensity:
-
-.db 50
-
 CARule:
 
 .db 30
@@ -56847,37 +56839,37 @@ CD 9F 9F
 CALL Graphics.ClearScreenBuffer
 CD DA 9D 
 CALL _LoadRow0Strings
-CD 6D A7 
+CD 6C A7 
 LD A, 0 | InitialRowSelectedFlags
 3E 3C 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 CALL _LoadRow1Strings
-CD 93 A7 
+CD 92 A7 
 LD A, 1 | InitialRowDeselectedFlags
 3E 0D 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 CALL _LoadRow2Strings
-CD CC A7 
+CD CB A7 
 LD A, 2 | InitialRowDeselectedFlags
 3E 0E 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 CALL _LoadRow3Strings
-CD 0E A8 
+CD 0D A8 
 LD A, 3 | InitialRowDeselectedFlags
 3E 0F 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 LD A, 0
 3E 00 
 CALL CARule.VisualizeRule
-CD 76 A1 
+CD 75 A1 
 CALL _DrawOkButton
-CD AA A5 
+CD A9 A5 
 CALL _FillOkButton
-CD BF A5 
+CD BE A5 
 _DrawBuf:
 
 CALL Graphics.WriteScreenBuffer
@@ -56885,17 +56877,17 @@ CD A8 9D
 _KeyLoop:
 
 CALL Random.UpdateSeed
-CD 54 A1 
+CD 53 A1 
 CALL Input.ReadArrow
-CD E2 A3 
+CD E1 A3 
 HandlerAddr = $+1
 
 JP _HandlerRow0
-C3 D4 A5 
+C3 D3 A5 
 __EndMain:
 
 CALL CARule.DrawCA
-CD 1E A2 
+CD 1D A2 
 rst 28h
 EF 
 .dw _GetKey
@@ -56917,7 +56909,7 @@ LD B, 1
 CALL Graphics.DrawRect
 CD E8 9D 
 LD HL, Globals.OkStr
-21 01 A1 
+21 00 A1 
 LD DE, $5425
 11 25 54 
 CALL String.Draw
@@ -56939,7 +56931,7 @@ C9
 _ChangeHandler:
 
 LD HL, HandlerAddr
-21 9B A5 
+21 9A A5 
 LD A, E
 7B 
 LD (HL), A
@@ -56973,63 +56965,63 @@ FE 01
 JR Z, _Row0Down
 28 3A 
 JP _KeyLoop
-C3 94 A5 
+C3 93 A5 
 _Row0Right:
 
 LD A, (Globals.CARule)
-3A D3 A0 
+3A D2 A0 
 INC A
 3C 
 LD (Globals.CARule), A
-32 D3 A0 
+32 D2 A0 
 LD A, 1
 3E 01 
 CALL CARule.VisualizeRule
-CD 76 A1 
+CD 75 A1 
 CALL _LoadRow0Strings
-CD 6D A7 
+CD 6C A7 
 LD A, 0 | SameRowFlags
 3E 28 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row0Left:
 
 LD A, (Globals.CARule)
-3A D3 A0 
+3A D2 A0 
 DEC A
 3D 
 LD (Globals.CARule), A
-32 D3 A0 
+32 D2 A0 
 LD A, 1
 3E 01 
 CALL CARule.VisualizeRule
-CD 76 A1 
+CD 75 A1 
 CALL _LoadRow0Strings
-CD 6D A7 
+CD 6C A7 
 LD A, 0 | SameRowFlags
 3E 28 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row0Up:
 
 CALL _DeselectRow0
-CD 64 A7 
+CD 63 A7 
 CALL _SelectOkButton
-CD 23 A8 
+CD 22 A8 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row0Down:
 
 CALL _DeselectRow0
-CD 64 A7 
+CD 63 A7 
 CALL _SelectRow1
-CD 7B A7 
+CD 7A A7 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 
 
 _HandlerRow1:
@@ -57051,7 +57043,7 @@ FE 01
 JR Z, _Row1Down
 28 43 
 JP _KeyLoop
-C3 94 A5 
+C3 93 A5 
 _Row1Right:
 
 LD A, (Globals.Row1Selection)
@@ -57097,39 +57089,39 @@ JR Z, __Row1RerenderRow2
 __RenderRow1:
 
 CALL _LoadRow1Strings
-CD 93 A7 
+CD 92 A7 
 LD A, 1 | SameRowFlags
 3E 29 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 __Row1RerenderRow2:
 
 CALL _LoadRow2Strings
-CD CC A7 
+CD CB A7 
 LD A, 2 | InitialRowDeselectedFlags
 3E 0E 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 JR __RenderRow1
 18 EB 
 _Row1Up:
 
 CALL _DeselectRow1
-CD 8A A7 
+CD 89 A7 
 CALL _SelectRow0
-CD 55 A7 
+CD 54 A7 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row1Down:
 
 CALL _DeselectRow1
-CD 8A A7 
+CD 89 A7 
 CALL _SelectRow2
-CD A8 A7 
+CD A7 A7 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _HandlerRow2Random:
 
 CP skRight
@@ -57163,7 +57155,7 @@ FE 01
 JR Z, _Row2Down
 28 4B 
 JP _KeyLoop
-C3 94 A5 
+C3 93 A5 
 _Row2RightPosition:
 
 LD A, (Globals.Row2Selection)
@@ -57197,7 +57189,7 @@ LD A, (Globals.RandomSeedDensity)
 CP 100
 FE 64 
 JP Z, _KeyLoop
-CA 94 A5 
+CA 93 A5 
 INC A
 3C 
 JR __UpdateRow2Random
@@ -57209,7 +57201,7 @@ LD A, (Globals.RandomSeedDensity)
 CP 0
 FE 00 
 JP Z, _KeyLoop
-CA 94 A5 
+CA 93 A5 
 DEC A
 3D 
 JR __UpdateRow2Random
@@ -57227,29 +57219,29 @@ LD (Globals.RandomSeedDensity), A
 __UpdateRow2:
 
 CALL _LoadRow2Strings
-CD CC A7 
+CD CB A7 
 LD A, 2 | SameRowFlags
 3E 2A 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row2Up:
 
 CALL _DeselectRow2
-CD C3 A7 
+CD C2 A7 
 CALL _SelectRow1
-CD 7B A7 
+CD 7A A7 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row2Down:
 
 CALL _DeselectRow2
-CD C3 A7 
+CD C2 A7 
 CALL _SelectRow3
-CD F6 A7 
+CD F5 A7 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 
 
 _HandlerRow3:
@@ -57271,7 +57263,7 @@ FE 01
 JR Z, _Row3Down
 28 26 
 JP _KeyLoop
-C3 94 A5 
+C3 93 A5 
 _Row3Right:
 
 LD A, (Globals.Row3Selection)
@@ -57293,29 +57285,29 @@ E6 03
 LD (Globals.Row3Selection), A
 32 64 A0 
 CALL _LoadRow3Strings
-CD 0E A8 
+CD 0D A8 
 LD A, 3 | SameRowFlags
 3E 2B 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row3Up:
 
 CALL _DeselectRow3
-CD 05 A8 
+CD 04 A8 
 CALL _SelectRow2
-CD A8 A7 
+CD A7 A7 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _Row3Down:
 
 CALL _DeselectRow3
-CD 05 A8 
+CD 04 A8 
 CALL _SelectOkButton
-CD 23 A8 
+CD 22 A8 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 
 
 _HandlerOkButton:
@@ -57329,41 +57321,41 @@ FE 01
 JR Z, _OkButtonDown
 28 14 
 CALL Input.ReadEnter
-CD C5 A3 
+CD C4 A3 
 CP skEnter
 FE 09 
 JP Z, __EndMain
-CA 9D A5 
+CA 9C A5 
 JP _KeyLoop
-C3 94 A5 
+C3 93 A5 
 _OkButtonUp:
 
 CALL _SelectRow3
-CD F6 A7 
+CD F5 A7 
 CALL _FillOkButton
-CD BF A5 
+CD BE A5 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _OkButtonDown:
 
 CALL _SelectRow0
-CD 55 A7 
+CD 54 A7 
 CALL _FillOkButton
-CD BF A5 
+CD BE A5 
 JP _DrawBuf
-C3 91 A5 
+C3 90 A5 
 _SelectRow0:
 
 CALL _LoadRow0Strings
-CD 6D A7 
+CD 6C A7 
 LD A, 0 | SelectRowFlags
 3E 38 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 LD DE, _HandlerRow0
-11 D4 A5 
+11 D3 A5 
 CALL _ChangeHandler
-CD CB A5 
+CD CA A5 
 RET
 C9 
 
@@ -57371,17 +57363,17 @@ C9
 _DeselectRow0:
 
 CALL _LoadRow0Strings
-CD 6D A7 
+CD 6C A7 
 LD A, 0 | DeselectRowFlags
 3E 18 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 RET
 C9 
 _LoadRow0Strings:
 
 LD A, (Globals.CARule)
-3A D3 A0 
+3A D2 A0 
 LD H, 0
 26 00 
 LD L, A
@@ -57391,7 +57383,7 @@ CD 0F A0
 EX DE, HL
 EB 
 LD HL, Globals.RuleStr
-21 D4 A0 
+21 D3 A0 
 RET
 C9 
 
@@ -57399,15 +57391,15 @@ C9
 _SelectRow1:
 
 CALL _LoadRow1Strings
-CD 93 A7 
+CD 92 A7 
 LD A, 1 | SelectRowFlags
 3E 39 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 LD DE, _HandlerRow1
-11 27 A6 
+11 26 A6 
 CALL _ChangeHandler
-CD CB A5 
+CD CA A5 
 RET
 C9 
 
@@ -57415,17 +57407,17 @@ C9
 _DeselectRow1:
 
 CALL _LoadRow1Strings
-CD 93 A7 
+CD 92 A7 
 LD A, 1 | DeselectRowFlags
 3E 19 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 RET
 C9 
 _LoadRow1Strings:
 
 LD DE, Globals.SeedStr
-11 DA A0 
+11 D9 A0 
 LD HL, Globals.Row1Selections
 21 57 A0 
 LD B, 0
@@ -57455,11 +57447,11 @@ C9
 _SelectRow2:
 
 CALL _LoadRow2Strings
-CD CC A7 
+CD CB A7 
 LD A, 2 | SelectRowFlags
 3E 3A 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 LD A, (Globals.Row1Selection)
 3A 56 A0 
 CP Globals.RandomSelectionIndex
@@ -57467,27 +57459,27 @@ FE 02
 JR Z, __SelectRow2Random
 28 05 
 LD DE, _HandlerRow2Position
-11 8D A6 
+11 8C A6 
 JR __SelectRow2Done
 18 03 
 __SelectRow2Random:
 
 LD DE, _HandlerRow2Random
-11 83 A6 
+11 82 A6 
 __SelectRow2Done:
 
 CALL _ChangeHandler
-CD CB A5 
+CD CA A5 
 RET
 C9 
 _DeselectRow2:
 
 CALL _LoadRow2Strings
-CD CC A7 
+CD CB A7 
 LD A, 2 | DeselectRowFlags
 3E 1A 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 RET
 C9 
 _LoadRow2Strings:
@@ -57499,7 +57491,7 @@ FE 02
 JR Z, __Row2RandomDensitySelected
 28 15 
 LD DE, Globals.PositionStr
-11 E0 A0 
+11 DF A0 
 LD HL, Globals.Row2Selections
 21 5E A0 
 LD B, 0
@@ -57535,7 +57527,7 @@ LD L, A
 CALL String.ConvertHLToDigitString
 CD 0F A0 
 LD DE, Globals.FilledPercentStr
-11 F1 A0 
+11 F0 A0 
 EX DE, HL
 EB 
 RET
@@ -57545,15 +57537,15 @@ C9
 _SelectRow3:
 
 CALL _LoadRow3Strings
-CD 0E A8 
+CD 0D A8 
 LD A, 3 | SelectRowFlags
 3E 3B 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 LD DE, _HandlerRow3
-11 F1 A6 
+11 F0 A6 
 CALL _ChangeHandler
-CD CB A5 
+CD CA A5 
 RET
 C9 
 
@@ -57561,17 +57553,17 @@ C9
 _DeselectRow3:
 
 CALL _LoadRow3Strings
-CD 0E A8 
+CD 0D A8 
 LD A, 3 | DeselectRowFlags
 3E 1B 
 CALL UI.DrawRow
-CD 4F A4 
+CD 4E A4 
 RET
 C9 
 _LoadRow3Strings:
 
 LD DE, Globals.EdgesStr
-11 EA A0 
+11 E9 A0 
 LD HL, Globals.Row3Selections
 21 65 A0 
 LD B, 0
@@ -57599,11 +57591,11 @@ C9
 _SelectOkButton:
 
 CALL _DrawOkButton
-CD AA A5 
+CD A9 A5 
 LD DE, _HandlerOkButton
-11 30 A7 
+11 2F A7 
 CALL _ChangeHandler
-CD CB A5 
+CD CA A5 
 RET
 C9 
 
