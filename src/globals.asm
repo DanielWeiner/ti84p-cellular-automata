@@ -50,8 +50,6 @@ PercentageTable:
         .db i * 256 / 100 
     .loop
 
-RandomSeedDensity:
-    .db 50
 CARule: 
     .db 30
 
