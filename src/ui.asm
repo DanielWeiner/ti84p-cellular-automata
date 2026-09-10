@@ -7,7 +7,6 @@
 .include 'glyph.asm'
 
 .module UI
-    
     .module RowFlags
         RowIndexMask = %00000011 ; Bits 0-1: Row index
         RenderLabel = %00000100 ; Rerender row label
@@ -38,7 +37,7 @@ __RowLabelEnd:
     LD   A, B
     PUSH BC
     PUSH DE
-    CALL DrawMiddle
+    CALL DrawGap
     POP  DE
     POP  BC
 __RowMiddleEnd:
@@ -153,7 +152,7 @@ DrawRowLabel: ; HL = label string, DE = selection string, A = row index
     POP  HL
     CALL String.Draw
     RET
-DrawMiddle: ; HL = label string, DE = selection string
+DrawGap: ; HL = label string, DE = selection string
     PUSH AF
     PUSH AF
     PUSH HL

@@ -44,7 +44,7 @@ _DrawBuf:
     CALL Graphics.WriteScreenBuffer
 _KeyLoop:
     CALL Random.UpdateSeed ; Uses input delay as a source of entropy
-    CALL Input.ReadArrow
+    CALL Input.ReadKey
 HandlerAddr = $+1
     JP _HandlerRow0
 __EndMain:
@@ -264,7 +264,6 @@ _HandlerOkButton:
     JR   Z, _OkButtonUp
     CP   skDown
     JR   Z, _OkButtonDown
-    CALL Input.ReadEnter
     CP   skEnter
     JP   Z, __EndMain
     JP   _KeyLoop

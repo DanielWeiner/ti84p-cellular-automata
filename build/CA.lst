@@ -10097,7 +10097,7 @@ EF
 .dw _RunIndicOff
 70 45 
 CALL Main.Main
-CD 5C A5 
+CD B6 A6 
 rst 28h
 EF 
 .dw _ClrScrnFull
@@ -54774,126 +54774,558 @@ E_MS .equ E_SS + FPLEN
 
 .module Input
 
-ArrowKeyGroup = %11111110
+KeyGroup6 = %10111111
 
-EnterKeyGroup = %11111101
+ScanKeys:
 
+LD B, KeyGroup6
+06 BF 
+__ReadKeysLoop:
 
-
-EnterKey = %11111110
-
-
-
-DownKey = %11111110
-
-LeftKey = %11111101
-
-RightKey = %11111011
-
-UpKey = %11110111
-
-
-
-ReadEnter:
-
-LD A, EnterKeyGroup
-3E FD 
-OUT (1), A
-D3 01 
-IN A, (1)
-DB 01 
-CP EnterKey
-FE FE 
-JR Z, __EnterKeyPressed
-28 02 
-XOR A
-AF 
-RET
-C9 
-__EnterKeyPressed:
-
-LD HL, $5000
-21 00 50 
-DI
-F3 
-__DelayLoop:
-
-NOP
-00 
-NOP
-00 
-NOP
-00 
-NOP
-00 
-DEC HL
-2B 
-LD A, H
-7C 
-OR L
-B5 
-JR NZ, __DelayLoop
-20 F7 
-EI
-FB 
-LD A, skEnter
-3E 09 
-RET
-C9 
-ReadArrow:
-
-LD A, ArrowKeyGroup
-3E FE 
+LD A, B
+78 
 OUT (1), A
 D3 01 
 IN A, (1)
 DB 01 
 CP $FF
 FE FF 
-JR Z, __NoKeyPressed
-28 1B 
-LD HL, 0
-21 00 00 
-LD (__KeyUps), HL
-22 49 A4 
-LD B, A
-47 
-LD A, (__DebouncedLastKey)
-3A 4B A4 
-CP B
-B8 
-JR NZ, __KeyChanged
-20 28 
-LD HL, (__Bounces)
-2A 4C A4 
-LD A, H
-7C 
-CP $0F
-FE 0F 
-JR NC, __ProcessKey
-30 2A 
-INC HL
-23 
-LD (__Bounces), HL
-22 4C A4 
+JR NZ, __CalculateKey
+20 06 
+RRC B
+CB 08 
+JR C, __ReadKeysLoop
+38 F3 
 XOR A
 AF 
 RET
 C9 
+__CalculateKey:
+
+BIT 0, B
+CB 40 
+JR Z, __CalculateKeyGroup0
+28 1E 
+BIT 1, B
+CB 48 
+JR Z, __CalculateKeyGroup1
+28 38 
+BIT 2, B
+CB 50 
+JR Z, __CalculateKeyGroup2
+28 67 
+BIT 3, B
+CB 58 
+JP Z, __CalculateKeyGroup3
+CA 7B A4 
+BIT 4, B
+CB 60 
+JP Z, __CalculateKeyGroup4
+CA B5 A4 
+BIT 5, B
+CB 68 
+JP Z, __CalculateKeyGroup5
+CA EF A4 
+BIT 6, B
+CB 70 
+JP Z, __CalculateKeyGroup6
+CA 22 A5 
+XOR A
+AF 
+RET
+C9 
+__CalculateKeyGroup0:
+
+BIT 0, A
+CB 47 
+JR NZ, $+5
+20 03 
+LD A, skDown
+3E 01 
+RET
+C9 
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, skLeft
+3E 02 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, skRight
+3E 03 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, skUp
+3E 04 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+__CalculateKeyGroup1:
+
+BIT 0, A
+CB 47 
+JR NZ, $+5
+20 03 
+LD A, skEnter
+3E 09 
+RET
+C9 
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, skAdd
+3E 0A 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, skSub
+3E 0B 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, skMul
+3E 0C 
+RET
+C9 
+BIT 4, A
+CB 67 
+JR NZ, $+5
+20 03 
+LD A, skDiv
+3E 0D 
+RET
+C9 
+BIT 5, A
+CB 6F 
+JR NZ, $+5
+20 03 
+LD A, skPower
+3E 0E 
+RET
+C9 
+BIT 6, A
+CB 77 
+JR NZ, $+5
+20 03 
+LD A, skClear
+3E 0F 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+__CalculateKeyGroup2:
+
+BIT 0, A
+CB 47 
+JR NZ, $+5
+20 03 
+LD A, skChs
+3E 11 
+RET
+C9 
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, sk3
+3E 12 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, sk6
+3E 13 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, sk9
+3E 14 
+RET
+C9 
+BIT 4, A
+CB 67 
+JR NZ, $+5
+20 03 
+LD A, skLParen
+3E 1D 
+RET
+C9 
+BIT 5, A
+CB 6F 
+JR NZ, $+5
+20 03 
+LD A, skTan
+3E 16 
+RET
+C9 
+BIT 6, A
+CB 77 
+JR NZ, $+5
+20 03 
+LD A, skVars
+3E 17 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+
+
+__CalculateKeyGroup3:
+
+BIT 0, A
+CB 47 
+JR NZ, $+5
+20 03 
+LD A, skDecPnt
+3E 19 
+RET
+C9 
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, sk2
+3E 1A 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, sk5
+3E 1B 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, sk8
+3E 1C 
+RET
+C9 
+BIT 4, A
+CB 67 
+JR NZ, $+5
+20 03 
+LD A, skRParen
+3E 15 
+RET
+C9 
+BIT 5, A
+CB 6F 
+JR NZ, $+5
+20 03 
+LD A, skCos
+3E 1E 
+RET
+C9 
+BIT 6, A
+CB 77 
+JR NZ, $+5
+20 03 
+LD A, skPrgm
+3E 1F 
+RET
+C9 
+BIT 7, A
+CB 7F 
+JR NZ, $+5
+20 03 
+LD A, skStat
+3E 20 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+
+
+__CalculateKeyGroup4:
+
+BIT 0, A
+CB 47 
+JR NZ, $+5
+20 03 
+LD A, sk0
+3E 21 
+RET
+C9 
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, sk1
+3E 22 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, sk4
+3E 23 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, sk7
+3E 24 
+RET
+C9 
+BIT 4, A
+CB 67 
+JR NZ, $+5
+20 03 
+LD A, skComma
+3E 25 
+RET
+C9 
+BIT 5, A
+CB 6F 
+JR NZ, $+5
+20 03 
+LD A, skSin
+3E 26 
+RET
+C9 
+BIT 6, A
+CB 77 
+JR NZ, $+5
+20 03 
+LD A, skMatrix
+3E 27 
+RET
+C9 
+BIT 7, A
+CB 7F 
+JR NZ, $+5
+20 03 
+LD A, skGraphvar
+3E 28 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+__CalculateKeyGroup5:
+
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, skStore
+3E 2A 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, skLn
+3E 2B 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, skLog
+3E 2C 
+RET
+C9 
+BIT 4, A
+CB 67 
+JR NZ, $+5
+20 03 
+LD A, skSquare
+3E 2D 
+RET
+C9 
+BIT 5, A
+CB 6F 
+JR NZ, $+5
+20 03 
+LD A, skRecip
+3E 2E 
+RET
+C9 
+BIT 6, A
+CB 77 
+JR NZ, $+5
+20 03 
+LD A, skMath
+3E 2F 
+RET
+C9 
+BIT 7, A
+CB 7F 
+JR NZ, $+5
+20 03 
+LD A, skAlpha
+3E 30 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+
+
+__CalculateKeyGroup6:
+
+BIT 0, A
+CB 47 
+JR NZ, $+5
+20 03 
+LD A, skGraph
+3E 31 
+RET
+C9 
+BIT 1, A
+CB 4F 
+JR NZ, $+5
+20 03 
+LD A, skTrace
+3E 32 
+RET
+C9 
+BIT 2, A
+CB 57 
+JR NZ, $+5
+20 03 
+LD A, skZoom
+3E 33 
+RET
+C9 
+BIT 3, A
+CB 5F 
+JR NZ, $+5
+20 03 
+LD A, skWindow
+3E 34 
+RET
+C9 
+BIT 4, A
+CB 67 
+JR NZ, $+5
+20 03 
+LD A, skYEqu
+3E 35 
+RET
+C9 
+BIT 5, A
+CB 6F 
+JR NZ, $+5
+20 03 
+LD A, sk2nd
+3E 36 
+RET
+C9 
+BIT 6, A
+CB 77 
+JR NZ, $+5
+20 03 
+LD A, skMode
+3E 37 
+RET
+C9 
+BIT 7, A
+CB 7F 
+JR NZ, $+5
+20 03 
+LD A, skDel
+3E 38 
+RET
+C9 
+XOR A
+AF 
+RET
+C9 
+ReadKey:
+
+CALL ScanKeys
+CD C4 A3 
+OR A
+B7 
+JR Z, __NoKeyPressed
+28 1C 
+LD HL, 0
+21 00 00 
+LD (__KeyUps), HL
+22 A3 A5 
+LD B, A
+47 
+LD A, (__DebouncedLastKey)
+3A A5 A5 
+CP B
+B8 
+JR NZ, __KeyChanged
+20 29 
+LD HL, (__Bounces)
+2A A6 A5 
+LD A, H
+7C 
+CP $0E
+FE 0E 
+LD A, B
+78 
+RET NC
+D0 
+INC HL
+23 
+LD (__Bounces), HL
+22 A6 A5 
+XOR A
+AF 
+JR ReadKey
+18 DE 
 __NoKeyPressed:
 
 LD HL, (__KeyUps)
-2A 49 A4 
+2A A3 A5 
 LD A, H
 7C 
-CP $02
-FE 02 
+CP $01
+FE 01 
 JR NC, __DefiniteKeyUp
 30 06 
 INC HL
 23 
 LD (__KeyUps), HL
-22 49 A4 
+22 A3 A5 
 XOR A
 AF 
 RET
@@ -54905,9 +55337,9 @@ LD A, $FF
 SBC HL, HL
 ED 62 
 LD (__DebouncedLastKey), A
-32 4B A4 
+32 A5 A5 
 LD (__Bounces), HL
-22 4C A4 
+22 A6 A5 
 XOR A
 AF 
 RET
@@ -54917,63 +55349,11 @@ __KeyChanged:
 LD A, B
 78 
 LD (__DebouncedLastKey), A
-32 4B A4 
+32 A5 A5 
 LD HL, 0
 21 00 00 
 LD (__Bounces), HL
-22 4C A4 
-__ProcessKey:
-
-LD A, B
-78 
-CP DownKey
-FE FE 
-JR Z, __DownKeyPressed
-28 0E 
-CP LeftKey
-FE FD 
-JR Z, __LeftKeyPressed
-28 0D 
-CP RightKey
-FE FB 
-JR Z, __RightKeyPressed
-28 0C 
-CP UpKey
-FE F7 
-JR Z, __UpKeyPressed
-28 0B 
-XOR A
-AF 
-RET
-C9 
-__DownKeyPressed:
-
-LD A, skDown
-3E 01 
-RET
-C9 
-
-
-__LeftKeyPressed:
-
-LD A, skLeft
-3E 02 
-RET
-C9 
-
-
-__RightKeyPressed:
-
-LD A, skRight
-3E 03 
-RET
-C9 
-
-
-__UpKeyPressed:
-
-LD A, skUp
-3E 04 
+22 A6 A5 
 RET
 C9 
 __KeyUps:
@@ -56206,8 +56586,6 @@ GlyphTableEntryAddr:
 
 .module UI
 
-
-
 .module RowFlags
 
 RowIndexMask = %00000011
@@ -56247,7 +56625,7 @@ D5
 PUSH HL
 E5 
 CALL DrawRowLabel
-CD E3 A4 
+CD 3D A6 
 POP HL
 E1 
 POP DE
@@ -56268,8 +56646,8 @@ PUSH BC
 C5 
 PUSH DE
 D5 
-CALL DrawMiddle
-CD 03 A5 
+CALL DrawGap
+CD 5D A6 
 POP DE
 D1 
 POP BC
@@ -56287,7 +56665,7 @@ F5
 PUSH DE
 D5 
 CALL DrawRowSelection
-CD 7E A4 
+CD D8 A5 
 POP DE
 D1 
 POP AF
@@ -56301,7 +56679,7 @@ JR Z, __RowRectEnd
 AND RowFlags.RowIndexMask
 E6 03 
 CALL DrawRowRect
-CD 39 A5 
+CD 93 A6 
 __RowRectEnd:
 
 RET
@@ -56498,7 +56876,7 @@ CALL String.Draw
 CD 3D A0 
 RET
 C9 
-DrawMiddle:
+DrawGap:
 
 PUSH AF
 F5 
@@ -56839,37 +57217,37 @@ CD 9F 9F
 CALL Graphics.ClearScreenBuffer
 CD DA 9D 
 CALL _LoadRow0Strings
-CD 6C A7 
+CD C3 A8 
 LD A, 0 | InitialRowSelectedFlags
 3E 3C 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 CALL _LoadRow1Strings
-CD 92 A7 
+CD E9 A8 
 LD A, 1 | InitialRowDeselectedFlags
 3E 0D 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 CALL _LoadRow2Strings
-CD CB A7 
+CD 22 A9 
 LD A, 2 | InitialRowDeselectedFlags
 3E 0E 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 CALL _LoadRow3Strings
-CD 0D A8 
+CD 64 A9 
 LD A, 3 | InitialRowDeselectedFlags
 3E 0F 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 LD A, 0
 3E 00 
 CALL CARule.VisualizeRule
 CD 75 A1 
 CALL _DrawOkButton
-CD A9 A5 
+CD 03 A7 
 CALL _FillOkButton
-CD BE A5 
+CD 18 A7 
 _DrawBuf:
 
 CALL Graphics.WriteScreenBuffer
@@ -56878,12 +57256,12 @@ _KeyLoop:
 
 CALL Random.UpdateSeed
 CD 53 A1 
-CALL Input.ReadArrow
-CD E1 A3 
+CALL Input.ReadKey
+CD 5C A5 
 HandlerAddr = $+1
 
 JP _HandlerRow0
-C3 D3 A5 
+C3 2D A7 
 __EndMain:
 
 CALL CARule.DrawCA
@@ -56931,7 +57309,7 @@ C9
 _ChangeHandler:
 
 LD HL, HandlerAddr
-21 9A A5 
+21 F4 A6 
 LD A, E
 7B 
 LD (HL), A
@@ -56965,7 +57343,7 @@ FE 01
 JR Z, _Row0Down
 28 3A 
 JP _KeyLoop
-C3 93 A5 
+C3 ED A6 
 _Row0Right:
 
 LD A, (Globals.CARule)
@@ -56979,13 +57357,13 @@ LD A, 1
 CALL CARule.VisualizeRule
 CD 75 A1 
 CALL _LoadRow0Strings
-CD 6C A7 
+CD C3 A8 
 LD A, 0 | SameRowFlags
 3E 28 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row0Left:
 
 LD A, (Globals.CARule)
@@ -56999,29 +57377,29 @@ LD A, 1
 CALL CARule.VisualizeRule
 CD 75 A1 
 CALL _LoadRow0Strings
-CD 6C A7 
+CD C3 A8 
 LD A, 0 | SameRowFlags
 3E 28 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row0Up:
 
 CALL _DeselectRow0
-CD 63 A7 
+CD BA A8 
 CALL _SelectOkButton
-CD 22 A8 
+CD 79 A9 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row0Down:
 
 CALL _DeselectRow0
-CD 63 A7 
+CD BA A8 
 CALL _SelectRow1
-CD 7A A7 
+CD D1 A8 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 
 
 _HandlerRow1:
@@ -57043,7 +57421,7 @@ FE 01
 JR Z, _Row1Down
 28 43 
 JP _KeyLoop
-C3 93 A5 
+C3 ED A6 
 _Row1Right:
 
 LD A, (Globals.Row1Selection)
@@ -57089,39 +57467,39 @@ JR Z, __Row1RerenderRow2
 __RenderRow1:
 
 CALL _LoadRow1Strings
-CD 92 A7 
+CD E9 A8 
 LD A, 1 | SameRowFlags
 3E 29 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 __Row1RerenderRow2:
 
 CALL _LoadRow2Strings
-CD CB A7 
+CD 22 A9 
 LD A, 2 | InitialRowDeselectedFlags
 3E 0E 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 JR __RenderRow1
 18 EB 
 _Row1Up:
 
 CALL _DeselectRow1
-CD 89 A7 
+CD E0 A8 
 CALL _SelectRow0
-CD 54 A7 
+CD AB A8 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row1Down:
 
 CALL _DeselectRow1
-CD 89 A7 
+CD E0 A8 
 CALL _SelectRow2
-CD A7 A7 
+CD FE A8 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _HandlerRow2Random:
 
 CP skRight
@@ -57155,7 +57533,7 @@ FE 01
 JR Z, _Row2Down
 28 4B 
 JP _KeyLoop
-C3 93 A5 
+C3 ED A6 
 _Row2RightPosition:
 
 LD A, (Globals.Row2Selection)
@@ -57189,7 +57567,7 @@ LD A, (Globals.RandomSeedDensity)
 CP 100
 FE 64 
 JP Z, _KeyLoop
-CA 93 A5 
+CA ED A6 
 INC A
 3C 
 JR __UpdateRow2Random
@@ -57201,7 +57579,7 @@ LD A, (Globals.RandomSeedDensity)
 CP 0
 FE 00 
 JP Z, _KeyLoop
-CA 93 A5 
+CA ED A6 
 DEC A
 3D 
 JR __UpdateRow2Random
@@ -57219,29 +57597,29 @@ LD (Globals.RandomSeedDensity), A
 __UpdateRow2:
 
 CALL _LoadRow2Strings
-CD CB A7 
+CD 22 A9 
 LD A, 2 | SameRowFlags
 3E 2A 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row2Up:
 
 CALL _DeselectRow2
-CD C2 A7 
+CD 19 A9 
 CALL _SelectRow1
-CD 7A A7 
+CD D1 A8 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row2Down:
 
 CALL _DeselectRow2
-CD C2 A7 
+CD 19 A9 
 CALL _SelectRow3
-CD F5 A7 
+CD 4C A9 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 
 
 _HandlerRow3:
@@ -57263,7 +57641,7 @@ FE 01
 JR Z, _Row3Down
 28 26 
 JP _KeyLoop
-C3 93 A5 
+C3 ED A6 
 _Row3Right:
 
 LD A, (Globals.Row3Selection)
@@ -57285,29 +57663,29 @@ E6 03
 LD (Globals.Row3Selection), A
 32 64 A0 
 CALL _LoadRow3Strings
-CD 0D A8 
+CD 64 A9 
 LD A, 3 | SameRowFlags
 3E 2B 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row3Up:
 
 CALL _DeselectRow3
-CD 04 A8 
+CD 5B A9 
 CALL _SelectRow2
-CD A7 A7 
+CD FE A8 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _Row3Down:
 
 CALL _DeselectRow3
-CD 04 A8 
+CD 5B A9 
 CALL _SelectOkButton
-CD 22 A8 
+CD 79 A9 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 
 
 _HandlerOkButton:
@@ -57315,47 +57693,45 @@ _HandlerOkButton:
 CP skUp
 FE 04 
 JR Z, _OkButtonUp
-28 0F 
+28 0C 
 CP skDown
 FE 01 
 JR Z, _OkButtonDown
-28 14 
-CALL Input.ReadEnter
-CD C4 A3 
+28 11 
 CP skEnter
 FE 09 
 JP Z, __EndMain
-CA 9C A5 
+CA F6 A6 
 JP _KeyLoop
-C3 93 A5 
+C3 ED A6 
 _OkButtonUp:
 
 CALL _SelectRow3
-CD F5 A7 
+CD 4C A9 
 CALL _FillOkButton
-CD BE A5 
+CD 18 A7 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _OkButtonDown:
 
 CALL _SelectRow0
-CD 54 A7 
+CD AB A8 
 CALL _FillOkButton
-CD BE A5 
+CD 18 A7 
 JP _DrawBuf
-C3 90 A5 
+C3 EA A6 
 _SelectRow0:
 
 CALL _LoadRow0Strings
-CD 6C A7 
+CD C3 A8 
 LD A, 0 | SelectRowFlags
 3E 38 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 LD DE, _HandlerRow0
-11 D3 A5 
+11 2D A7 
 CALL _ChangeHandler
-CD CA A5 
+CD 24 A7 
 RET
 C9 
 
@@ -57363,11 +57739,11 @@ C9
 _DeselectRow0:
 
 CALL _LoadRow0Strings
-CD 6C A7 
+CD C3 A8 
 LD A, 0 | DeselectRowFlags
 3E 18 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 RET
 C9 
 _LoadRow0Strings:
@@ -57391,15 +57767,15 @@ C9
 _SelectRow1:
 
 CALL _LoadRow1Strings
-CD 92 A7 
+CD E9 A8 
 LD A, 1 | SelectRowFlags
 3E 39 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 LD DE, _HandlerRow1
-11 26 A6 
+11 80 A7 
 CALL _ChangeHandler
-CD CA A5 
+CD 24 A7 
 RET
 C9 
 
@@ -57407,11 +57783,11 @@ C9
 _DeselectRow1:
 
 CALL _LoadRow1Strings
-CD 92 A7 
+CD E9 A8 
 LD A, 1 | DeselectRowFlags
 3E 19 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 RET
 C9 
 _LoadRow1Strings:
@@ -57447,11 +57823,11 @@ C9
 _SelectRow2:
 
 CALL _LoadRow2Strings
-CD CB A7 
+CD 22 A9 
 LD A, 2 | SelectRowFlags
 3E 3A 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 LD A, (Globals.Row1Selection)
 3A 56 A0 
 CP Globals.RandomSelectionIndex
@@ -57459,27 +57835,27 @@ FE 02
 JR Z, __SelectRow2Random
 28 05 
 LD DE, _HandlerRow2Position
-11 8C A6 
+11 E6 A7 
 JR __SelectRow2Done
 18 03 
 __SelectRow2Random:
 
 LD DE, _HandlerRow2Random
-11 82 A6 
+11 DC A7 
 __SelectRow2Done:
 
 CALL _ChangeHandler
-CD CA A5 
+CD 24 A7 
 RET
 C9 
 _DeselectRow2:
 
 CALL _LoadRow2Strings
-CD CB A7 
+CD 22 A9 
 LD A, 2 | DeselectRowFlags
 3E 1A 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 RET
 C9 
 _LoadRow2Strings:
@@ -57537,15 +57913,15 @@ C9
 _SelectRow3:
 
 CALL _LoadRow3Strings
-CD 0D A8 
+CD 64 A9 
 LD A, 3 | SelectRowFlags
 3E 3B 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 LD DE, _HandlerRow3
-11 F0 A6 
+11 4A A8 
 CALL _ChangeHandler
-CD CA A5 
+CD 24 A7 
 RET
 C9 
 
@@ -57553,11 +57929,11 @@ C9
 _DeselectRow3:
 
 CALL _LoadRow3Strings
-CD 0D A8 
+CD 64 A9 
 LD A, 3 | DeselectRowFlags
 3E 1B 
 CALL UI.DrawRow
-CD 4E A4 
+CD A8 A5 
 RET
 C9 
 _LoadRow3Strings:
@@ -57591,11 +57967,11 @@ C9
 _SelectOkButton:
 
 CALL _DrawOkButton
-CD A9 A5 
+CD 03 A7 
 LD DE, _HandlerOkButton
-11 2F A7 
+11 89 A8 
 CALL _ChangeHandler
-CD CA A5 
+CD 24 A7 
 RET
 C9 
 
