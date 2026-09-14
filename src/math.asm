@@ -24,6 +24,20 @@ __DivHLBy10Loop:
     INC  L      ; quotient bit is now 1
     DJNZ __DivHLBy10Loop
     RET
+
+DivHLBy100:
+    XOR A     ; clear out the remainder accumulator
+              ; similar to division by 10, shift 7 bits of HL into A (first 7 bits are always 0 when dividing by 100)
+    LD A, H   ; start by moving HL 8 bits left into remainder
+    LD H, L
+    LD L, 0
+              ; Then rewind the shift right 1 bit, resulting in a shift of 7
+    RRA       ; shift remainder 1 bit right
+    RR H      ; propagate the carry from remainder into H
+    RR L      ; and again into L.
+    LD B, 9   ; initialize loop counter and divisor for division by 100
+    LD C, 100
+    JR __DivHLBy10Loop ; Reuse the same loop for division by 100
 .endmodule ; Math
 
 #endif ; MATH_ASM

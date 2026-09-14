@@ -194,11 +194,10 @@ __DrawFirstRowRandom:
     LD   A, (Globals.RandomSeedDensity)
     CP   100
     JR   Z, _DrawFirstRowFill
-    LD   L, 0           ; Compute percent density scaled by 256
-    LD   H, A           ; HL = A * 256 (just move A to the high byte)
-    CALL Math.DivHLBy10 ; HL = HL / 10
-    CALL Math.DivHLBy10 ; HL = HL / 10 again
-    LD   D, L           ; Threshold = A * 256 / 100
+    LD   L, 0            ; Compute percent density scaled by 256
+    LD   H, A            ; HL = A * 256 (just move A to the high byte)
+    CALL Math.DivHLBy100 ; HL = HL / 100
+    LD   D, L            ; Threshold = A * 256 / 100
     LD   C, Screen.WidthBytes
     LD   HL, Screen.Address
 _DrawFirstRowRandomLoop:
