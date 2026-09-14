@@ -44264,7 +44264,7 @@ CALL Random.GenerateWord
 CD F7 A0 
 POP DE
 D1 
-_DensityThreshoLD = $+1
+_DensityThreshold = $+1
 
 LD D, 0
 16 00 

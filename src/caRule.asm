@@ -210,7 +210,7 @@ _GenerateDensityByte:
     PUSH DE
     CALL Random.GenerateWord
     POP  DE
-_DensityThreshoLD   = $+1
+_DensityThreshold = $+1
     LD   D, 0
     LD   A, L
     CP   D
