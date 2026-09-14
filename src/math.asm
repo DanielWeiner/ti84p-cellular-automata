@@ -25,16 +25,16 @@ __DivHLBy10Loop:
     DJNZ __DivHLBy10Loop
     RET
 
-DivHLBy100:
-    XOR  A     ; clear out the remainder accumulator
+DivHLBy100:    ; Divides HL in place by 100, remainder in A, destroys BC
+    XOR  A     ; clear out carry flag for right shifts
                ; similar to division by 10, shift 6 bits of HL into A (first 6 bits are always 0 when dividing by 100)
-    LD   A, H  ; start by moving HL 8 bits left into remainder
+    LD   A, H  ; start with a left shift of 8 bits into the remainder accumulator via a full byte copy
     LD   H, L
     LD   L, 0
-    RRA        ; shift remainder 1 bit right
-    RR   H     ; propagate the carry from remainder into H
-    RR   L     ; and again into L.
-    RRA        ; repeat
+    RRA        ; Then shift A into HL right twice to make a final count of 6 left shifts
+    RR   H
+    RR   L
+    RRA
     RR   H
     RR   L
     LD   B, 10 ; initialize loop counter and divisor for division by 100
