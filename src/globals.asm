@@ -42,14 +42,7 @@ Row3LastIndex = lastIndex(Row3Selections)
 
 RandomSeedDensity:
     .db 50
-; When producing random pixels, the pixel density is calculated as follows:
-; If density percent is 100, then all pixels will be produced.
-; If PercentageTable[density percent] > random value, then produce the pixel.
-PercentageTable:
-    .for i = 0 to 99
-        .db i * 256 / 100 
-    .loop
-
+    
 CARule: 
     .db 30
 
