@@ -16,13 +16,12 @@ DivHLBy10:      ; Divides HL in place by 10, remainder in A, destroys BC
     LD   B, 13 ; 16 iterations minus the first three which are already done
     LD   C, 10 ; Divisor for the division by 10
 __DivHLBy10Loop:
-    ADD HL, HL ; shift another 0 into the quotient portion of HL
-    RLA        ; shift a bit into remainder and check if 10 can be subtracted
-    CP C       ; if 10 can be subtracted from remainder, subtract it and set the quotient bit to 1
-    JR C, __DivHLBy10Next ; otherwise, quotient bit remains 0
-    SUB C      ; subtract 10 from remainder
-    INC L      ; quotient bit is now 1
-__DivHLBy10Next:
+    ADD  HL, HL ; shift another 0 into the quotient portion of HL
+    RLA         ; shift a bit into remainder and check if 10 can be subtracted
+    CP   C      ; if 10 can be subtracted from remainder, subtract it and set the quotient bit to 1
+    JR   C, $+4 ; otherwise, skip both the subtraction and the increment of the quotient bit
+    SUB  C      ; subtract 10 from remainder
+    INC  L      ; quotient bit is now 1
     DJNZ __DivHLBy10Loop
     RET
 .endmodule ; Math
