@@ -42604,14 +42604,12 @@ RLA
 17 
 CP C
 B9 
-JR C, __DivHLBy10Next
+JR C, $+4
 38 02 
 SUB C
 91 
 INC L
 2C 
-__DivHLBy10Next:
-
 DJNZ __DivHLBy10Loop
 10 F7 
 RET
