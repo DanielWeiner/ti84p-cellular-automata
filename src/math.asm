@@ -4,8 +4,8 @@
 .module Math
 DivHLBy10:      ; Divides HL in place by 10, remainder in A, destroys BC
     XOR  A      ; Clear out the remainder accumulator
-    ; As HL is shifted left into the remainder, the quotient is inserted into HL from the LSB, making use of the space made available by the shift
     ADD  HL, HL ; Shift HL left into remainder accumulator. No subtractions can be done in the first 3 iterations when dividing by 10
+                ; This is because all numbers with three digis are less than 10 
     RLA
     ADD  HL, HL
     RLA
@@ -16,12 +16,14 @@ DivHLBy10:      ; Divides HL in place by 10, remainder in A, destroys BC
     LD   B, 13 ; 16 iterations minus the first three which are already done
     LD   C, 10 ; Divisor for the division by 10
 __LongDivisionLoop:
-    ADD  HL, HL ; shift another 0 into the quotient portion of HL
-    RLA         ; shift a bit into remainder and check if 10 can be subtracted
-    CP   C      ; if 10 can be subtracted from remainder, subtract it and set the quotient bit to 1
-    JR   C, $+4 ; otherwise, skip both the subtraction and the increment of the quotient bit
-    SUB  C      ; subtract 10 from remainder
-    INC  L      ; quotient bit is now 1
+    ; As HL is shifted left into the remainder, the quotient is inserted into HL from the LSB
+    ; making use of the space made available by the shift
+    ADD  HL, HL ; take one digit from the dividend into the remainder, leaving a 0 in the LSB of the quotient
+    RLA
+    CP   C      ; check if the divisor can be subtracted from the remainder
+    JR   C, $+4 ; if it can't, skip to the next digit, remainder unchanged and LSB of the quotient at 0
+    SUB  C      ; if the divisor can be subtracted, subtract it from the remainder
+    INC  L      ; quotient LSB was 0, incrementing it changes it to 1
     DJNZ __LongDivisionLoop
     RET
 

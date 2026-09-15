@@ -42574,10 +42574,10 @@ DivHLBy10:
 
 XOR A
 AF 
-
-
 ADD HL, HL
 29 
+
+
 RLA
 17 
 ADD HL, HL
@@ -42597,6 +42597,10 @@ LD B, 13
 LD C, 10
 0E 0A 
 __LongDivisionLoop:
+
+
+
+
 
 ADD HL, HL
 29 
