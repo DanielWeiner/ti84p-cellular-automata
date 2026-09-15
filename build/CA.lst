@@ -42596,7 +42596,7 @@ LD B, 13
 06 0D 
 LD C, 10
 0E 0A 
-__DivHLBy10Loop:
+__LongDivisionLoop:
 
 ADD HL, HL
 29 
@@ -42610,7 +42610,7 @@ SUB C
 91 
 INC L
 2C 
-DJNZ __DivHLBy10Loop
+DJNZ __LongDivisionLoop
 10 F7 
 RET
 C9 
@@ -42644,7 +42644,7 @@ LD B, 10
 06 0A 
 LD C, 100
 0E 64 
-JR __DivHLBy10Loop
+JR __LongDivisionLoop
 18 E1 
 .endmodule
 

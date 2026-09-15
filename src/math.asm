@@ -15,14 +15,14 @@ DivHLBy10:      ; Divides HL in place by 10, remainder in A, destroys BC
     ; A contains three leading bits. When shifting another bit in, 10 can be subtracted from A at most 1 time
     LD   B, 13 ; 16 iterations minus the first three which are already done
     LD   C, 10 ; Divisor for the division by 10
-__DivHLBy10Loop:
+__LongDivisionLoop:
     ADD  HL, HL ; shift another 0 into the quotient portion of HL
     RLA         ; shift a bit into remainder and check if 10 can be subtracted
     CP   C      ; if 10 can be subtracted from remainder, subtract it and set the quotient bit to 1
     JR   C, $+4 ; otherwise, skip both the subtraction and the increment of the quotient bit
     SUB  C      ; subtract 10 from remainder
     INC  L      ; quotient bit is now 1
-    DJNZ __DivHLBy10Loop
+    DJNZ __LongDivisionLoop
     RET
 
 DivHLBy100:    ; Divides HL in place by 100, remainder in A, destroys BC
@@ -39,7 +39,7 @@ DivHLBy100:    ; Divides HL in place by 100, remainder in A, destroys BC
     RR   L
     LD   B, 10 ; initialize loop counter and divisor for division by 100
     LD   C, 100
-    JR   __DivHLBy10Loop ; Reuse the same loop for division by 100
+    JR   __LongDivisionLoop ; Reuse the same loop for division by 100
 .endmodule ; Math
 
 #endif ; MATH_ASM
